@@ -2,6 +2,9 @@
 
 Sistema de gestión de inventario y pedidos para **SaludCaribe**, diseñado para administrar insumos médicos, odontológicos, de enfermería, aseo y papelería. Incluye panel de administración completo, carrito de compras y seguimiento de pedidos.
 
+> **Frontend:** https://saludcaribe-shop.vercel.app  
+> **Backend API:** https://saludcaribe-shop.onrender.com
+
 ---
 
 ## Tabla de contenidos
@@ -143,7 +146,7 @@ El backend está dockerizado con un `Dockerfile` multi-stage listo para Render.
 | Variable | Valor |
 |---|---|
 | `JWT_SECRET` | Genera un valor seguro (mínimo 32 chars) |
-| `CORS_ORIGINS` | URL de tu frontend en Vercel (ej: `https://saludcaribe.vercel.app`) |
+| `CORS_ORIGINS` | URL de tu frontend en Vercel (ej: `https://saludcaribe-shop.vercel.app`) |
 | `DATA_DIR` | `/app/data` |
 | `UPLOADS_DIR` | `/app/uploads` |
 
@@ -172,7 +175,7 @@ El backend está dockerizado con un `Dockerfile` multi-stage listo para Render.
 
 | Variable | Valor |
 |---|---|
-| `VITE_API_BASE_URL` | URL de tu backend en Render (ej: `https://saludcaribe-backend.onrender.com`) |
+| `VITE_API_BASE_URL` | URL de tu backend en Render (ej: `https://saludcaribe-shop.onrender.com`) |
 
 5. Haz clic en **Deploy**.
 
@@ -184,9 +187,9 @@ El backend está dockerizado con un `Dockerfile` multi-stage listo para Render.
 
 Después de ambos despliegues:
 
-1. Copia la URL del backend de Render (ej: `https://saludcaribe-backend.onrender.com`)
+1. Copia la URL del backend de Render (ej: `https://saludcaribe-shop.onrender.com`)
 2. En Vercel → Settings → Environment Variables → actualiza `VITE_API_BASE_URL`
-3. Copia la URL del frontend de Vercel (ej: `https://saludcaribe.vercel.app`)
+3. Copia la URL del frontend de Vercel (ej: `https://saludcaribe-shop.vercel.app`)
 4. En Render → Environment → actualiza `CORS_ORIGINS`
 5. Redespliega ambos servicios para que los cambios tomen efecto
 

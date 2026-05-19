@@ -32,8 +32,10 @@ backend/.mvn/wrapper/maven-wrapper.jar
 backend/uploads/
 
 # ── Variables de entorno ─────────────────────────────────────────────────────
+# .env.production SI se sube (contiene solo URLs, no secretos)
 .env
-.env.*
+.env.local
+.env.*.local
 .dev.vars
 
 # ── IDEs / OS ────────────────────────────────────────────────────────────────

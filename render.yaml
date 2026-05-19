@@ -10,7 +10,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://REEMPLAZA-CON-TU-URL.vercel.app
+        value: https://saludcaribe-shop.vercel.app
       - key: DATA_DIR
         value: /app/data
       - key: UPLOADS_DIR
