@@ -35,7 +35,7 @@ function storeTokens(res: AuthResponse) {
 }
 
 function buildUser(res: AuthResponse): AuthUser {
-  return { id: res.userId, email: res.email, fullName: res.fullName, area: res.area, roles: res.roles };
+  return { id: res.userId, email: res.email, fullName: res.fullName, area: res.area, roles: res.roles ?? [] };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ user, isAdmin: user?.roles.includes("admin") ?? false, loading, signIn, signUp, signOut }}>
+    <Ctx.Provider value={{ user, isAdmin: user?.roles?.includes("admin") ?? false, loading, signIn, signUp, signOut }}>
       {children}
     </Ctx.Provider>
   );

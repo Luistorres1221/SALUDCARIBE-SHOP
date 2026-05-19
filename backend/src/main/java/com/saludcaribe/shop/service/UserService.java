@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +37,8 @@ public class UserService {
                 .password(passwordEncoder.encode(req.getPassword()))
                 .fullName(req.getFullName())
                 .area(req.getArea())
+                .createdAt(LocalDateTime.now())
+                .roles(new ArrayList<>())
                 .build();
         return toResponse(userRepository.save(user));
     }
@@ -58,6 +62,9 @@ public class UserService {
     public void assignRole(UUID userId, AppRole role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        if (user.getRoles() == null) {
+            user.setRoles(new ArrayList<>());
+        }
         if (!user.getRoles().contains(role)) {
             user.getRoles().add(role);
             userRepository.save(user);
@@ -67,8 +74,10 @@ public class UserService {
     public void removeRole(UUID userId, AppRole role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-        user.getRoles().remove(role);
-        userRepository.save(user);
+        if (user.getRoles() != null) {
+            user.getRoles().remove(role);
+            userRepository.save(user);
+        }
     }
 
     private UserResponse toResponse(User u) {

@@ -3,6 +3,8 @@ package com.saludcaribe.shop.service;
 import com.saludcaribe.shop.dto.auth.*;
 import com.saludcaribe.shop.model.User;
 import com.saludcaribe.shop.repository.UserRepository;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import com.saludcaribe.shop.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
@@ -28,6 +30,8 @@ public class AuthService {
                 .password(passwordEncoder.encode(req.getPassword()))
                 .fullName(req.getFullName())
                 .area(req.getArea())
+                .createdAt(LocalDateTime.now())
+                .roles(new ArrayList<>())
                 .build();
         userRepository.save(user);
         return buildResponse(user);
