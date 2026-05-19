@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Stethoscope, Smile, Sparkles, FileText, Package, ArrowRight } from "lucide-react";
 import { formatCOP, useCart } from "@/lib/cart-context";
+import { resolveImageUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -69,7 +70,7 @@ function Index() {
                 <Card className="overflow-hidden shadow-card hover:shadow-lg transition-all hover:-translate-y-0.5 border-border/60">
                   <div className="h-28 bg-muted">
                     {c.imageUrl ? (
-                      <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" loading="lazy" />
+                      <img src={resolveImageUrl(c.imageUrl)} alt={c.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full bg-accent text-accent-foreground flex items-center justify-center group-hover:bg-brand transition-colors">
                         <Icon className="w-8 h-8" />
@@ -104,7 +105,7 @@ function Index() {
               <Card key={p.id} className="overflow-hidden shadow-card hover:shadow-lg transition-shadow flex flex-col">
                 <div className="aspect-square bg-muted relative">
                   {p.imageUrl ? (
-                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <Package className="w-12 h-12" />

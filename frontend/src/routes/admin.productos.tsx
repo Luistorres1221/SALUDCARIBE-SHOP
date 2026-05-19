@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Plus, Edit, Trash2, Package, Download, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatCOP } from "@/lib/cart-context";
+import { resolveImageUrl } from "@/lib/utils";
 import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin/productos")({
@@ -128,7 +129,7 @@ function AdminProducts() {
           <Card key={p.id} className="p-4 flex flex-wrap items-center gap-3">
             <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
               {p.imageUrl
-                ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                ? <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" />
                 : <Package className="w-6 h-6 text-muted-foreground" />}
             </div>
             <div className="flex-1 min-w-0">
@@ -193,7 +194,7 @@ function AdminProducts() {
               {/* Vista previa */}
               {form.imageUrl ? (
                 <div className="relative mt-1 mb-2 w-full h-40 rounded-md overflow-hidden border border-border bg-muted">
-                  <img src={form.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                  <img src={resolveImageUrl(form.imageUrl)} alt="Vista previa" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, imageUrl: "" })}

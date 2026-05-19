@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Search } from "lucide-react";
+import { resolveImageUrl } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/productos")({
@@ -122,7 +123,7 @@ function ProductsPage() {
                 <Card key={p.id} className="overflow-hidden shadow-card hover:shadow-lg transition-shadow flex flex-col">
                   <div className="aspect-square bg-muted relative">
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                      <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <Package className="w-12 h-12" />

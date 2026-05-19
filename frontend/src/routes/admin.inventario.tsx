@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatCOP } from "@/lib/cart-context";
 import { Download, Package, Save, Search, Upload } from "lucide-react";
+import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -251,7 +252,7 @@ function InventoryPage() {
                     <td className="py-3 pr-3">
                       <div className="flex items-center gap-3 min-w-64">
                         <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                          {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" /> : <Package className="w-5 h-5 text-muted-foreground" />}
+                          {p.imageUrl ? <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" /> : <Package className="w-5 h-5 text-muted-foreground" />}
                         </div>
                         <div className="min-w-0">
                           <div className="font-medium truncate">{p.name}</div>

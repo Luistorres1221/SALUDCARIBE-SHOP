@@ -5,6 +5,7 @@ import { ordersApi } from "@/api/orders";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Minus, Plus, Package, ShoppingBag } from "lucide-react";
+import { resolveImageUrl } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -58,7 +59,7 @@ function CartPage() {
               <Card key={i.id} className="p-4 flex gap-4 items-center">
                 <div className="w-20 h-20 rounded-md bg-muted overflow-hidden shrink-0">
                   {i.productImageUrl ? (
-                    <img src={i.productImageUrl} alt={i.productName} className="w-full h-full object-cover" />
+                    <img src={resolveImageUrl(i.productImageUrl)} alt={i.productName} className="w-full h-full object-cover" />
                   ) : <Package className="w-full h-full p-5 text-muted-foreground" />}
                 </div>
                 <div className="flex-1 min-w-0">

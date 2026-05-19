@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Edit, ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
+import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/categorias")({
@@ -128,7 +129,7 @@ function AdminCategories() {
           <Card key={c.id} className="p-4 flex items-center justify-between gap-3">
             <div className="w-16 h-16 rounded-md bg-muted overflow-hidden flex items-center justify-center shrink-0">
               {c.imageUrl ? (
-                <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                <img src={resolveImageUrl(c.imageUrl)} alt={c.name} className="w-full h-full object-cover" />
               ) : (
                 <ImageIcon className="w-7 h-7 text-muted-foreground" />
               )}
@@ -175,7 +176,7 @@ function AdminCategories() {
               <Label>Imagen de la categoria</Label>
               {form.imageUrl ? (
                 <div className="relative mt-1 mb-2 w-full h-40 rounded-md overflow-hidden border border-border bg-muted">
-                  <img src={form.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                  <img src={resolveImageUrl(form.imageUrl)} alt="Vista previa" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, imageUrl: "" })}
