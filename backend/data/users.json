@@ -1,0 +1,9 @@
+[ {
+  "id" : "d11cacbf-8053-4837-ba49-114ec506f225",
+  "email" : "admin@saludcaribe.com",
+  "password" : "$2a$10$SzHg7FK.coC7yy1RB2OKCOblyREO4y/LmySl19.Vz7H7huONl0NZW",
+  "fullName" : "Administrador",
+  "area" : "Administración",
+  "createdAt" : "2026-05-19T12:26:54.693921",
+  "roles" : [ "admin" ]
+} ]

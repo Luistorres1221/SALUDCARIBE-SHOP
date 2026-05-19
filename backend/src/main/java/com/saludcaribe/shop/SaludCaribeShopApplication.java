@@ -1,0 +1,11 @@
+package com.saludcaribe.shop;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SaludCaribeShopApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(SaludCaribeShopApplication.class, args);
+    }
+}

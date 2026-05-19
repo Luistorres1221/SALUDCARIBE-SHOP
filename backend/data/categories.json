@@ -1,0 +1,29 @@
+[ {
+  "id" : "d0b13b77-0fcf-43f6-afbb-0fba23b1a46c",
+  "name" : "Insumos Médicos",
+  "slug" : "insumos-medicos",
+  "description" : "Material médico general",
+  "icon" : "Stethoscope",
+  "imageUrl" : "/api/uploads/8a95e775-b713-4daf-9699-aa55aa9bda3e.jpg"
+}, {
+  "id" : "9c698494-4c96-49e3-bea3-3ba23ab23730",
+  "name" : "Papelería",
+  "slug" : "papeleria",
+  "description" : "Materiales de oficina",
+  "icon" : "FileText",
+  "imageUrl" : "/api/uploads/f52a7c4a-7bf9-4a79-b584-da3bd90874b3.jpg"
+}, {
+  "id" : "31b3d37d-324d-4048-a393-3874c7e49b64",
+  "name" : "Aseo y Limpieza",
+  "slug" : "aseo",
+  "description" : "Productos de higiene y limpieza",
+  "icon" : "Package",
+  "imageUrl" : "/api/uploads/f58e8abc-e80d-41a4-bc36-f1f6d05585e9.jpg"
+}, {
+  "id" : "287e033d-e7ea-4b7d-9dbb-8812acd621b6",
+  "name" : "Odontología",
+  "slug" : "odontologia",
+  "description" : "Insumos para atención dental",
+  "icon" : "Smile",
+  "imageUrl" : "/api/uploads/3b880ef7-8055-4ed6-bd25-3fe699d5ef50.jpg"
+} ]
