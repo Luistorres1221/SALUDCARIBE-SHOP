@@ -24,9 +24,9 @@ public class ProductService {
             return productRepository.search(q).stream().map(this::toResponse).toList();
         }
         if (categoryId != null) {
-            return productRepository.findByCategoryIdAndActiveTrue(categoryId).stream().map(this::toResponse).toList();
+            return productRepository.findByCategoryIdAndActiveTrueOrderByCreatedAtDesc(categoryId).stream().map(this::toResponse).toList();
         }
-        return productRepository.findByActiveTrue().stream().map(this::toResponse).toList();
+        return productRepository.findByActiveTrueOrderByCreatedAtDesc().stream().map(this::toResponse).toList();
     }
 
     public List<ProductResponse> findAllAdmin() {

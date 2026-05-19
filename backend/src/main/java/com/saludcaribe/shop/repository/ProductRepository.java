@@ -1,81 +1,25 @@
 package com.saludcaribe.shop.repository;
 
 import com.saludcaribe.shop.model.Product;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.UUID;
 
-@Repository
-public class ProductRepository {
+public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-    private final Map<UUID, Product> store = new ConcurrentHashMap<>();
+    List<Product> findByActiveTrueOrderByCreatedAtDesc();
 
-    @Value("${app.data.dir:./data}")
-    private String dataDir;
+    List<Product> findByCategoryIdAndActiveTrueOrderByCreatedAtDesc(UUID categoryId);
 
-    private Path dataFile() {
-        return Path.of(dataDir, "products.json");
-    }
+    @Query("SELECT p FROM Product p WHERE p.active = true AND LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')) ORDER BY p.createdAt DESC NULLS LAST")
+    List<Product> search(@Param("q") String q);
 
-    @PostConstruct
-    void load() {
-        store.putAll(JsonFileStore.load(dataFile(), Product.class, Product::getId));
-    }
+    boolean existsBySku(String sku);
 
-    private void persist() {
-        JsonFileStore.save(dataFile(), store.values());
-    }
-
-    public Product save(Product product) {
-        if (product.getId() == null) {
-            product.setId(UUID.randomUUID());
-        }
-        store.put(product.getId(), product);
-        persist();
-        return product;
-    }
-
-    public Optional<Product> findById(UUID id) {
-        return Optional.ofNullable(store.get(id));
-    }
-
-    public List<Product> findAll() {
-        return store.values().stream()
-                .sorted(Comparator.comparing(Product::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .collect(Collectors.toList());
-    }
-
-    public List<Product> findByActiveTrue() {
-        return store.values().stream()
-                .filter(p -> Boolean.TRUE.equals(p.getActive()))
-                .sorted(Comparator.comparing(Product::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .collect(Collectors.toList());
-    }
-
-    public List<Product> findByCategoryIdAndActiveTrue(UUID categoryId) {
-        return store.values().stream()
-                .filter(p -> Boolean.TRUE.equals(p.getActive()) && categoryId.equals(p.getCategoryId()))
-                .collect(Collectors.toList());
-    }
-
-    public List<Product> search(String q) {
-        String lower = q.toLowerCase();
-        return store.values().stream()
-                .filter(p -> Boolean.TRUE.equals(p.getActive()) && p.getName().toLowerCase().contains(lower))
-                .collect(Collectors.toList());
-    }
-
-    public boolean existsBySku(String sku) {
-        return store.values().stream().anyMatch(p -> p.getSku().equals(sku));
-    }
-
-    public void deleteById(UUID id) {
-        store.remove(id);
-        persist();
-    }
+    @Override
+    @Query("SELECT p FROM Product p ORDER BY p.createdAt DESC NULLS LAST")
+    List<Product> findAll();
 }

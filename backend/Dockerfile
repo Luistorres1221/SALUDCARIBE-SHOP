@@ -14,8 +14,8 @@ RUN mvn package -DskipTests -B -q
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Crear directorios de datos y uploads
-RUN mkdir -p /app/data /app/uploads
+# Crear directorio de uploads para imagenes
+RUN mkdir -p /app/uploads
 
 # Copiar el JAR generado
 COPY --from=build /app/target/*.jar app.jar

@@ -1,3 +1,8 @@
+databases:
+  - name: saludcaribe-db
+    databaseName: saludcaribe
+    plan: free
+
 services:
   - type: web
     name: saludcaribe-backend
@@ -11,7 +16,25 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://saludcaribe-shop.vercel.app
-      - key: DATA_DIR
-        value: /app/data
       - key: UPLOADS_DIR
         value: /app/uploads
+      - key: DB_HOST
+        fromDatabase:
+          name: saludcaribe-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: saludcaribe-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: saludcaribe-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: saludcaribe-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: saludcaribe-db
+          property: password

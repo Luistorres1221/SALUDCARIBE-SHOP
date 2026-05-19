@@ -1,68 +1,24 @@
 package com.saludcaribe.shop.repository;
 
 import com.saludcaribe.shop.model.CartItem;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-@Repository
-public class CartItemRepository {
+public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
-    private final Map<UUID, CartItem> store = new ConcurrentHashMap<>();
+    List<CartItem> findByUserId(UUID userId);
 
-    @Value("${app.data.dir:./data}")
-    private String dataDir;
+    Optional<CartItem> findByUserIdAndProductId(UUID userId, UUID productId);
 
-    private Path dataFile() {
-        return Path.of(dataDir, "cart-items.json");
-    }
-
-    @PostConstruct
-    void load() {
-        store.putAll(JsonFileStore.load(dataFile(), CartItem.class, CartItem::getId));
-    }
-
-    private void persist() {
-        JsonFileStore.save(dataFile(), store.values());
-    }
-
-    public CartItem save(CartItem item) {
-        if (item.getId() == null) {
-            item.setId(UUID.randomUUID());
-        }
-        store.put(item.getId(), item);
-        persist();
-        return item;
-    }
-
-    public Optional<CartItem> findById(UUID id) {
-        return Optional.ofNullable(store.get(id));
-    }
-
-    public List<CartItem> findByUserId(UUID userId) {
-        return store.values().stream()
-                .filter(i -> userId.equals(i.getUserId()))
-                .collect(Collectors.toList());
-    }
-
-    public Optional<CartItem> findByUserIdAndProductId(UUID userId, UUID productId) {
-        return store.values().stream()
-                .filter(i -> userId.equals(i.getUserId()) && productId.equals(i.getProductId()))
-                .findFirst();
-    }
-
-    public void deleteById(UUID id) {
-        store.remove(id);
-        persist();
-    }
-
-    public void deleteByUserId(UUID userId) {
-        store.values().removeIf(i -> userId.equals(i.getUserId()));
-        persist();
-    }
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM CartItem c WHERE c.userId = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }
