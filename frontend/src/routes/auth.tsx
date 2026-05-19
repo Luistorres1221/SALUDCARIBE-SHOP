@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Stethoscope } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -37,9 +37,7 @@ function AuthPage() {
     <div className="min-h-screen gradient-brand flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 shadow-card">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-3">
-            <Stethoscope className="w-7 h-7" />
-          </div>
+          <img src={logoImg} alt="SaludCaribe Shop" className="w-24 h-24 rounded-full object-cover mb-3 shadow-md" />
           <h1 className="text-2xl font-bold">SaludCaribe Shop</h1>
           <p className="text-sm text-muted-foreground">Gestión interna de insumos médicos</p>
         </div>
