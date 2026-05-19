@@ -16,8 +16,12 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://saludcaribe-shop.vercel.app
-      - key: UPLOADS_DIR
-        value: /app/uploads
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ds3mnb969
+      - key: CLOUDINARY_API_KEY
+        value: "616238273691591"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: DB_HOST
         fromDatabase:
           name: saludcaribe-db

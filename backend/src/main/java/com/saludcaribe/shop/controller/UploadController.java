@@ -1,29 +1,24 @@
 package com.saludcaribe.shop.controller;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.PathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/uploads")
+@RequiredArgsConstructor
 @Slf4j
 public class UploadController {
 
-    @Value("${app.uploads.dir:./uploads}")
-    private String uploadsDir;
+    private final Cloudinary cloudinary;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) throws IOException {
@@ -36,41 +31,14 @@ public class UploadController {
             return ResponseEntity.badRequest().body(Map.of("error", "Solo se permiten archivos de imagen"));
         }
 
-        Path dir = Paths.get(uploadsDir);
-        Files.createDirectories(dir);
+        @SuppressWarnings("rawtypes")
+        Map result = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap("folder", "saludcaribe")
+        );
 
-        String original = file.getOriginalFilename();
-        String ext = StringUtils.getFilenameExtension(original);
-        String filename = UUID.randomUUID() + (ext != null && !ext.isBlank() ? "." + ext : "");
-
-        Path dest = dir.resolve(filename);
-        try (var in = file.getInputStream()) {
-            Files.copy(in, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        log.info("Archivo subido: {}", filename);
-        return ResponseEntity.ok(Map.of("url", "/api/uploads/" + filename));
-    }
-
-    @GetMapping("/{filename:.+}")
-    public ResponseEntity<Resource> getFile(@PathVariable String filename) {
-        Path filePath = Paths.get(uploadsDir).resolve(filename).normalize().toAbsolutePath();
-        Resource resource = new PathResource(filePath);
-
-        if (!resource.exists() || !resource.isReadable()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        String contentType;
-        try {
-            contentType = Files.probeContentType(filePath);
-        } catch (IOException e) {
-            contentType = null;
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(
-                        contentType != null ? contentType : "application/octet-stream"))
-                .body(resource);
+        String url = (String) result.get("secure_url");
+        log.info("Imagen subida a Cloudinary: {}", url);
+        return ResponseEntity.ok(Map.of("url", url));
     }
 }
