@@ -93,7 +93,7 @@ function AdminOrders() {
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="pl-10" />
         </div>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos los estados</SelectItem>
             {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
@@ -116,7 +116,7 @@ function AdminOrders() {
               <div className="flex gap-1">
                 <Button size="icon" variant="ghost" onClick={() => setDetail(o)}><Eye className="w-4 h-4" /></Button>
                 <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v as OrderStatus)}>
-                  <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
                   </SelectContent>

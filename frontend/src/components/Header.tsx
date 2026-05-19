@@ -79,7 +79,7 @@ export function Header() {
                   <UserIcon className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuContent align="end" className="w-60 max-w-[90vw]">
                 <DropdownMenuLabel>
                   <div className="font-medium">{user.fullName || user.email}</div>
                   <div className="text-xs text-muted-foreground">{user.email}</div>

@@ -171,7 +171,7 @@ function Dashboard() {
         ))}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {insights.map((item) => (
           <Card key={item.label} className="p-4 flex items-start gap-3 shadow-card">
             <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 ${item.color}`}>

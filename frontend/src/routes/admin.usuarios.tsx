@@ -97,7 +97,7 @@ function AdminUsers() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
         <h1 className="text-2xl font-bold">Usuarios</h1>
         <Button onClick={openNew}><Plus className="w-4 h-4 mr-1" /> Nuevo usuario</Button>
       </div>

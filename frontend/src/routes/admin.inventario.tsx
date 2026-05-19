@@ -250,7 +250,7 @@ function InventoryPage() {
                 return (
                   <tr key={p.id} className="border-b last:border-0">
                     <td className="py-3 pr-3">
-                      <div className="flex items-center gap-3 min-w-64">
+                      <div className="flex items-center gap-3 min-w-48">
                         <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {p.imageUrl ? <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" /> : <Package className="w-5 h-5 text-muted-foreground" />}
                         </div>
@@ -262,10 +262,10 @@ function InventoryPage() {
                     </td>
                     <td className="py-3 px-3 text-muted-foreground">{p.categoryName ?? "Sin categoria"}</td>
                     <td className="py-3 px-3">
-                      <Input type="number" min={0} value={draft.price} onChange={(e) => updateDraft(p.id, { price: Number(e.target.value) })} />
+                      <Input type="number" min={0} value={draft.price} className="w-24" onChange={(e) => updateDraft(p.id, { price: Number(e.target.value) })} />
                     </td>
                     <td className="py-3 px-3">
-                      <Input type="number" min={0} value={draft.stock} onChange={(e) => updateDraft(p.id, { stock: Number(e.target.value) })} />
+                      <Input type="number" min={0} value={draft.stock} className="w-20" onChange={(e) => updateDraft(p.id, { stock: Number(e.target.value) })} />
                     </td>
                     <td className="py-3 px-3">
                       {draft.stock <= 0 ? <Badge variant="destructive">Agotado</Badge> : draft.stock <= 5 ? <Badge variant="secondary">Bajo</Badge> : <Badge variant="outline">Disponible</Badge>}

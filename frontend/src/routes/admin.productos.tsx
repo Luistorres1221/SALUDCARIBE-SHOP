@@ -153,7 +153,7 @@ function AdminProducts() {
             <DialogTitle>{editing ? "Editar" : "Nuevo"} producto</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>SKU</Label>
                 <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />

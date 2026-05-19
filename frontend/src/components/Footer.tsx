@@ -9,7 +9,7 @@ export function Footer() {
   return (
     <footer className="gradient-brand border-t border-white/20 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
 
           {/* Logo y marca */}
           <div className="flex flex-col items-center md:items-start gap-3">
