@@ -13,6 +13,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
     Optional<User> findByEmail(@Param("email") String email);
 
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE LOWER(u.email) = LOWER(:email)")
-    boolean existsByEmail(@Param("email") String email);
+    default boolean existsByEmail(String email) {
+        return findByEmail(email).isPresent();
+    }
 }

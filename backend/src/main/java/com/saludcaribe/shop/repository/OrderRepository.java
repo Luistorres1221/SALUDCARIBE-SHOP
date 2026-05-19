@@ -10,10 +10,10 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items WHERE o.userId = :userId ORDER BY o.createdAt DESC NULLS LAST")
+    @Query("SELECT o FROM Order o WHERE o.userId = :userId ORDER BY o.createdAt DESC NULLS LAST")
     List<Order> findByUserId(@Param("userId") UUID userId);
 
     @Override
-    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items ORDER BY o.createdAt DESC NULLS LAST")
+    @Query("SELECT o FROM Order o ORDER BY o.createdAt DESC NULLS LAST")
     List<Order> findAll();
 }
