@@ -9,27 +9,29 @@ Sistema de gestión de inventario y pedidos para **SaludCaribe**, diseñado para
 - [Características](#características)
 - [Stack tecnológico](#stack-tecnológico)
 - [Estructura del proyecto](#estructura-del-proyecto)
-- [Requisitos previos](#requisitos-previos)
-- [Instalación y ejecución](#instalación-y-ejecución)
+- [Ejecución local](#ejecución-local)
+- [Despliegue en producción](#despliegue-en-producción)
+  - [Backend en Render](#1-backend-en-render)
+  - [Frontend en Vercel](#2-frontend-en-vercel)
 - [Credenciales de acceso](#credenciales-de-acceso)
 - [Roles del sistema](#roles-del-sistema)
-- [Endpoints principales de la API](#endpoints-principales-de-la-api)
+- [Endpoints de la API](#endpoints-de-la-api)
 - [Variables de entorno](#variables-de-entorno)
 
 ---
 
 ## Características
 
-- **Autenticación JWT** — acceso seguro con tokens de acceso (24 h) y refresco (7 días)
+- **Autenticación JWT** — tokens de acceso (24 h) y refresco (7 días)
 - **Panel de administración** — gestión completa de productos, categorías, usuarios y pedidos
 - **Catálogo de productos** — búsqueda por nombre/categoría, filtro por disponibilidad
 - **Carrito de compras** — agregar, actualizar cantidad y eliminar ítems
 - **Gestión de pedidos** — historial personal y vista global para administradores
-- **Subida de imágenes** — carga de imágenes de productos desde el equipo local
+- **Subida de imágenes** — carga de imágenes desde el explorador de archivos
 - **Exportación a Excel** — exportar listado de productos con un clic
 - **Control de roles** — 7 roles configurables por el administrador
 - **Datos de muestra** — 5 categorías y 20 productos precargados al iniciar
-- **Almacenamiento en memoria** — sin base de datos externa; ideal para desarrollo y demo
+- **Persistencia JSON** — los datos se guardan en archivos JSON (sin base de datos externa)
 
 ---
 
@@ -43,7 +45,8 @@ Sistema de gestión de inventario y pedidos para **SaludCaribe**, diseñado para
 | Spring Security | 6.x |
 | JWT (jjwt) | 0.11.5 |
 | Lombok | 1.18.32 |
-| Maven | 3.x |
+| Maven | 3.9 |
+| Docker | Multi-stage build |
 
 ### Frontend
 | Tecnología | Versión |
@@ -55,7 +58,6 @@ Sistema de gestión de inventario y pedidos para **SaludCaribe**, diseñado para
 | Tailwind CSS | 4 |
 | shadcn/ui | — |
 | Axios | 1.7 |
-| SheetJS (xlsx) | 0.18 |
 
 ---
 
@@ -63,75 +65,130 @@ Sistema de gestión de inventario y pedidos para **SaludCaribe**, diseñado para
 
 ```
 SALUDCARIBE-SHOP/
-├── backend/                        # API REST Spring Boot
-│   ├── src/main/java/com/saludcaribe/shop/
-│   │   ├── config/                 # SecurityConfig, CorsConfig, DataInitializer
-│   │   ├── controller/             # AuthController, ProductController, OrderController…
-│   │   ├── dto/                    # Request/Response DTOs
-│   │   ├── model/                  # User, Product, Category, Cart, Order, AppRole
-│   │   ├── repository/             # Repositorios en memoria (ConcurrentHashMap)
-│   │   ├── security/               # JwtAuthenticationFilter, JwtService, UserDetailsServiceImpl
-│   │   └── service/                # AuthService, ProductService, CartService, OrderService…
-│   └── src/main/resources/
-│       └── application.properties
-└── frontend/                       # SPA React + Vite
-    └── src/
-        ├── api/                    # Clientes HTTP (auth, products, categories, cart, orders, users)
-        ├── components/             # Header, componentes UI (shadcn)
-        ├── lib/                    # auth-context, cart-context, utils
-        └── routes/                 # Páginas (TanStack Router file-based routing)
-            ├── index.tsx           # Inicio / vitrina
-            ├── productos.tsx       # Catálogo público
-            ├── carrito.tsx         # Carrito de compras
-            ├── pedidos.*.tsx       # Historial de pedidos
-            ├── auth.tsx            # Login
-            └── admin.*.tsx         # Panel de administración
+├── backend/
+│   ├── Dockerfile                  # Imagen Docker multi-stage
+│   ├── .dockerignore
+│   ├── pom.xml
+│   └── src/main/java/com/saludcaribe/shop/
+│       ├── config/                 # SecurityConfig, CorsConfig, DataInitializer
+│       ├── controller/             # AuthController, ProductController, ...
+│       ├── dto/                    # Request/Response DTOs
+│       ├── model/                  # User, Product, Category, Cart, Order, AppRole
+│       ├── repository/             # Repositorios con JsonFileStore (ConcurrentHashMap)
+│       ├── security/               # JwtAuthenticationFilter, JwtService
+│       └── service/                # AuthService, ProductService, CartService, ...
+├── frontend/
+│   ├── vercel.json                 # Configuración SPA routing para Vercel
+│   └── src/
+│       ├── api/                    # Clientes HTTP
+│       ├── components/             # Header, UI (shadcn)
+│       ├── lib/                    # auth-context, cart-context
+│       └── routes/                 # Páginas (TanStack Router)
+└── render.yaml                     # Configuración de despliegue en Render
 ```
 
 ---
 
-## Requisitos previos
+## Ejecución local
 
-- **Java 21** (JDK)
-- **Maven 3.8+**
-- **Node.js 18+**
-- **npm** (incluido con Node.js)
+### Requisitos
+- Java 21 (JDK)
+- Maven 3.8+
+- Node.js 18+
 
----
-
-## Instalación y ejecución
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/Luistorres1221/SALUDCARIBE-SHOP.git
-cd SALUDCARIBE-SHOP
-```
-
-### 2. Iniciar el backend
+### 1. Backend
 
 ```bash
 cd backend
 mvn spring-boot:run
+# API disponible en http://localhost:8080
 ```
 
-El servidor arranca en `http://localhost:8080`.  
-Al iniciar por primera vez se cargan automáticamente:
-- Usuario administrador
-- 5 categorías
-- 20 productos de muestra con imágenes
+Al iniciar por primera vez se cargan automáticamente 5 categorías y 20 productos de muestra.
 
-### 3. Iniciar el frontend
+### 2. Frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev
+# App disponible en http://localhost:5173
 ```
 
-La aplicación queda disponible en `http://localhost:5173`.
+> El proxy de Vite redirige `/api` → `http://localhost:8080` en desarrollo.
 
-> El frontend tiene un proxy de Vite configurado: todas las peticiones a `/api` se redirigen automáticamente a `http://localhost:8080`.
+---
+
+## Despliegue en producción
+
+### 1. Backend en Render
+
+El backend está dockerizado con un `Dockerfile` multi-stage listo para Render.
+
+#### Pasos:
+
+1. Ve a [render.com](https://render.com) → **New** → **Web Service**
+2. Conecta el repositorio `Luistorres1221/SALUDCARIBE-SHOP`
+3. Configura el servicio:
+
+| Campo | Valor |
+|---|---|
+| **Runtime** | `Docker` |
+| **Dockerfile Path** | `./backend/Dockerfile` |
+| **Docker Context** | `./backend` |
+| **Plan** | Free |
+
+4. Agrega las siguientes **variables de entorno** en Render:
+
+| Variable | Valor |
+|---|---|
+| `JWT_SECRET` | Genera un valor seguro (mínimo 32 chars) |
+| `CORS_ORIGINS` | URL de tu frontend en Vercel (ej: `https://saludcaribe.vercel.app`) |
+| `DATA_DIR` | `/app/data` |
+| `UPLOADS_DIR` | `/app/uploads` |
+
+5. Haz clic en **Deploy**.
+
+> **Nota sobre persistencia:** En el plan gratuito de Render, el sistema de archivos es efímero. Los datos (JSON) y las imágenes subidas se perderán al reiniciar el servicio. El `DataInitializer` recargará los datos de muestra automáticamente. Para persistencia real, agrega un **Disk** en Render montado en `/app/data`.
+
+---
+
+### 2. Frontend en Vercel
+
+#### Pasos:
+
+1. Ve a [vercel.com](https://vercel.com) → **Add New** → **Project**
+2. Importa el repositorio `Luistorres1221/SALUDCARIBE-SHOP`
+3. En **Configure Project**, establece:
+
+| Campo | Valor |
+|---|---|
+| **Root Directory** | `frontend` |
+| **Framework Preset** | Vite (auto-detectado) |
+| **Build Command** | `npm run build` |
+| **Output Directory** | `dist` |
+
+4. Agrega la **variable de entorno**:
+
+| Variable | Valor |
+|---|---|
+| `VITE_API_BASE_URL` | URL de tu backend en Render (ej: `https://saludcaribe-backend.onrender.com`) |
+
+5. Haz clic en **Deploy**.
+
+> El archivo `frontend/vercel.json` ya incluye el rewrite necesario para que el enrutamiento SPA de TanStack Router funcione correctamente en Vercel.
+
+---
+
+### 3. Conectar frontend ↔ backend
+
+Después de ambos despliegues:
+
+1. Copia la URL del backend de Render (ej: `https://saludcaribe-backend.onrender.com`)
+2. En Vercel → Settings → Environment Variables → actualiza `VITE_API_BASE_URL`
+3. Copia la URL del frontend de Vercel (ej: `https://saludcaribe.vercel.app`)
+4. En Render → Environment → actualiza `CORS_ORIGINS`
+5. Redespliega ambos servicios para que los cambios tomen efecto
 
 ---
 
@@ -143,7 +200,7 @@ La aplicación queda disponible en `http://localhost:5173`.
 | **Contraseña** | `Admin1234!` |
 | **Rol** | Administrador |
 
-> Solo el administrador puede crear nuevos usuarios y asignarles roles. El auto-registro público está deshabilitado.
+> Solo el administrador puede crear usuarios y asignar roles. El registro público está deshabilitado.
 
 ---
 
@@ -161,7 +218,7 @@ La aplicación queda disponible en `http://localhost:5173`.
 
 ---
 
-## Endpoints principales de la API
+## Endpoints de la API
 
 ### Autenticación
 | Método | Ruta | Acceso | Descripción |
@@ -174,7 +231,7 @@ La aplicación queda disponible en `http://localhost:5173`.
 |---|---|---|---|
 | `GET` | `/api/products` | Público | Listar productos activos |
 | `GET` | `/api/products/{id}` | Público | Detalle de producto |
-| `GET` | `/api/products/admin` | Admin | Listar todos (incluye inactivos) |
+| `GET` | `/api/products/admin` | Admin | Todos (incluye inactivos) |
 | `POST` | `/api/products` | Admin | Crear producto |
 | `PUT` | `/api/products/{id}` | Admin | Actualizar producto |
 | `DELETE` | `/api/products/{id}` | Admin | Desactivar producto |
@@ -206,10 +263,11 @@ La aplicación queda disponible en `http://localhost:5173`.
 | `POST` | `/api/uploads` | Autenticado | Subir imagen |
 | `GET` | `/api/uploads/{filename}` | Público | Obtener imagen |
 
-### Usuarios (Admin)
+### Usuarios
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | `GET` | `/api/admin/users` | Admin | Listar usuarios |
+| `PUT` | `/api/admin/users/{id}` | Admin | Actualizar usuario |
 | `POST` | `/api/admin/users/{id}/roles` | Admin | Asignar rol |
 | `DELETE` | `/api/admin/users/{id}/roles/{role}` | Admin | Quitar rol |
 
@@ -217,37 +275,39 @@ La aplicación queda disponible en `http://localhost:5173`.
 
 ## Variables de entorno
 
-El backend se configura en `backend/src/main/resources/application.properties`:
+### Backend (`application.properties` / Render)
 
-```properties
-server.port=8080
+| Variable | Default (dev) | Producción |
+|---|---|---|
+| `PORT` | `8080` | Asignado por Render automáticamente |
+| `JWT_SECRET` | `CAMBIA_ESTE_SECRETO...` | Clave segura ≥ 32 chars |
+| `CORS_ORIGINS` | `http://localhost:5173` | URL de Vercel |
+| `DATA_DIR` | `./data` | `/app/data` |
+| `UPLOADS_DIR` | `./uploads` | `/app/uploads` |
 
-# JWT
-app.jwt.secret=CAMBIA_ESTE_SECRETO_EN_PRODUCCION_MINIMO_256_BITS_32_CHARS_OK
-app.jwt.expiration-ms=86400000
-app.jwt.refresh-expiration-ms=604800000
+### Frontend (Vite / Vercel)
 
-# CORS
-app.cors.allowed-origins=http://localhost:5173
-
-# Subida de archivos
-app.uploads.dir=./uploads
-spring.servlet.multipart.max-file-size=10MB
-spring.servlet.multipart.max-request-size=10MB
-```
-
-> En producción, cambia `app.jwt.secret` por una clave segura de al menos 32 caracteres.
+| Variable | Default (dev) | Producción |
+|---|---|---|
+| `VITE_API_BASE_URL` | `""` (proxy Vite) | URL del backend en Render |
 
 ---
 
-## Notas de desarrollo
+## Docker (local)
 
-- **Almacenamiento en memoria**: todos los datos se pierden al reiniciar el backend. El `DataInitializer` recarga automáticamente los datos de muestra al arrancar.
-- **Imágenes subidas**: se almacenan en `backend/uploads/` y se sirven en `/api/uploads/{filename}`.
-- **Compatibilidad Lombok + Java 21**: se requiere Lombok ≥ 1.18.32. La versión está fijada en `pom.xml`.
+Para probar el backend dockerizado localmente:
+
+```bash
+cd backend
+docker build -t saludcaribe-backend .
+docker run -p 8080:8080 \
+  -e JWT_SECRET=mi_secreto_seguro_de_al_menos_32_caracteres \
+  -e CORS_ORIGINS=http://localhost:5173 \
+  saludcaribe-backend
+```
 
 ---
 
 ## Licencia
 
-Este proyecto es de uso interno para SaludCaribe. Todos los derechos reservados.
+Uso interno para SaludCaribe. Todos los derechos reservados.

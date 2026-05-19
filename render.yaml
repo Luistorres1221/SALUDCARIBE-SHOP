@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: saludcaribe-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/categories
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://REEMPLAZA-CON-TU-URL.vercel.app
+      - key: DATA_DIR
+        value: /app/data
+      - key: UPLOADS_DIR
+        value: /app/uploads
