@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -35,6 +36,7 @@ export const Route = createRootRoute({
           <main className="flex-1">
             <Outlet />
           </main>
+          <Footer />
         </div>
         <Toaster richColors position="top-right" />
       </CartProvider>
