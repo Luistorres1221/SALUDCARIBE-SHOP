@@ -1,0 +1,60 @@
+# ── Node / Frontend ──────────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+.output/
+.vinxi/
+.tanstack/
+.nitro/
+
+# Build artifacts
+frontend/dist/
+frontend/node_modules/
+frontend/tsconfig.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Java / Maven ─────────────────────────────────────────────────────────────
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+
+# ── Uploads (archivos subidos en runtime) ────────────────────────────────────
+backend/uploads/
+
+# ── Variables de entorno / Tokens ────────────────────────────────────────────
+# .env.production SI se sube (contiene solo URLs, no secretos)
+.env
+.env.local
+.env.*.local
+.dev.vars
+token.json
+
+# ── IDEs / OS / Asistentes ───────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Cloudflare / Wrangler ────────────────────────────────────────────────────
+.wrangler/
+
+# ── Supabase ─────────────────────────────────────────────────────────────────
+supabase/.branches/
+supabase/.temp/

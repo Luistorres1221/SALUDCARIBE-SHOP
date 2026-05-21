@@ -1,0 +1,44 @@
+databases:
+  - name: saludcaribe-db
+    databaseName: saludcaribe
+    plan: free
+
+services:
+  - type: web
+    name: saludcaribe-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/categories
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://saludcaribe-shop.vercel.app
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ds3mnb969
+      - key: CLOUDINARY_API_KEY
+        value: "616238273691591"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: DB_HOST
+        fromDatabase:
+          name: saludcaribe-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: saludcaribe-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: saludcaribe-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: saludcaribe-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: saludcaribe-db
+          property: password
