@@ -398,7 +398,7 @@ function InventoryPage() {
     suppressAuthRedirect(false);
     setImporting(false);
     setPreview(null);
-    await load();
+    await load().catch(() => {});
 
     if (failed > 0) {
       toast.warning(`Importacion con errores: ${created} creados, ${updated} actualizados, ${failed} fallidos`);
