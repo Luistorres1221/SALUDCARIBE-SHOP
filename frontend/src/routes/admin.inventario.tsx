@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { categoriesApi, type Category } from "@/api/categories";
 import { productsApi, type Product, type ProductRequest } from "@/api/products";
+import { suppressAuthRedirect } from "@/api/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -374,6 +375,7 @@ function InventoryPage() {
   const executeImport = async () => {
     if (!preview) return;
     setImporting(true);
+    suppressAuthRedirect(true);
     let created = 0;
     let updated = 0;
     let failed  = 0;
@@ -393,6 +395,7 @@ function InventoryPage() {
       }
     }
 
+    suppressAuthRedirect(false);
     setImporting(false);
     setPreview(null);
     await load();

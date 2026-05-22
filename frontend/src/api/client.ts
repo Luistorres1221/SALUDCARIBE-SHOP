@@ -4,6 +4,11 @@ export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? "",
 });
 
+// Set to true during bulk operations (e.g. Excel import) so individual row
+// failures don't trigger a global redirect to the login page.
+let _suppressAuthRedirect = false;
+export const suppressAuthRedirect = (v: boolean) => { _suppressAuthRedirect = v; };
+
 apiClient.interceptors.request.use((config) => {
   const headers = AxiosHeaders.from(config.headers);
   const token = localStorage.getItem("accessToken");
@@ -22,7 +27,8 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const status = error.response?.status;
+    if (!_suppressAuthRedirect && (status === 401 || status === 403)) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("authUser");
