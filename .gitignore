@@ -39,6 +39,10 @@ backend/uploads/
 .dev.vars
 token.json
 
+# ── Configuración local (credenciales locales, no subir a producción) ─────────
+backend/src/main/resources/application-local.properties
+backend/start-local.bat
+
 # ── IDEs / OS / Asistentes ───────────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json

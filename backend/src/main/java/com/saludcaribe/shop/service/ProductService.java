@@ -54,6 +54,19 @@ public class ProductService {
         return toResponse(productRepository.save(buildProduct(p, req)));
     }
 
+    public ProductResponse patch(UUID id, ProductPatchRequest req) {
+        Product p = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+        if (req.getName() != null && !req.getName().isBlank()) p.setName(req.getName());
+        if (req.getDescription() != null) p.setDescription(req.getDescription());
+        if (req.getPrice() != null) p.setPrice(req.getPrice());
+        if (req.getStock() != null) p.setStock(req.getStock());
+        if (req.getImageUrl() != null) p.setImageUrl(req.getImageUrl());
+        if (req.getCategoryId() != null) p.setCategoryId(req.getCategoryId());
+        if (req.getActive() != null) p.setActive(req.getActive());
+        return toResponse(productRepository.save(p));
+    }
+
     public void delete(UUID id) {
         Product p = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));

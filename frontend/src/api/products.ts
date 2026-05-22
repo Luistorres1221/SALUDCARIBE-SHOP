@@ -24,6 +24,16 @@ export interface ProductRequest {
   categoryId?: string;
 }
 
+export interface ProductPatch {
+  name?: string;
+  description?: string;
+  price?: number;
+  stock?: number;
+  imageUrl?: string;
+  categoryId?: string;
+  active?: boolean;
+}
+
 export const productsApi = {
   getAll: (params?: { q?: string; categoryId?: string }) =>
     apiClient.get<Product[]>("/api/products", { params }).then((r) => r.data),
@@ -39,6 +49,9 @@ export const productsApi = {
 
   update: (id: string, data: ProductRequest) =>
     apiClient.put<Product>(`/api/products/${id}`, data).then((r) => r.data),
+
+  patch: (id: string, data: ProductPatch) =>
+    apiClient.patch<Product>(`/api/products/${id}`, data).then((r) => r.data),
 
   delete: (id: string) =>
     apiClient.delete(`/api/products/${id}`),

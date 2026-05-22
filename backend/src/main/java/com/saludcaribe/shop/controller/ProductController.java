@@ -49,6 +49,12 @@ public class ProductController {
         return productService.update(id, req);
     }
 
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
+    public ProductResponse patch(@PathVariable UUID id, @RequestBody ProductPatchRequest req) {
+        return productService.patch(id, req);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('admin')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

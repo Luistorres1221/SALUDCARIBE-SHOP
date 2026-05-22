@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2, Package, Download, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatCOP } from "@/lib/cart-context";
 import { resolveImageUrl } from "@/lib/utils";
+import { ProductImg } from "@/components/ProductImg";
 import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin/productos")({
@@ -142,9 +143,7 @@ function AdminProducts() {
         {products.map((p) => (
           <Card key={p.id} className="p-4 flex flex-wrap items-center gap-3">
             <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-              {p.imageUrl
-                ? <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover" />
-                : <Package className="w-6 h-6 text-muted-foreground" />}
+              <ProductImg src={p.imageUrl} alt={p.name} iconSize="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium truncate">{p.name}</div>

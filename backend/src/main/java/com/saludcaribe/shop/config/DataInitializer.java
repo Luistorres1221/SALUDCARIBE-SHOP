@@ -71,7 +71,7 @@ public class DataInitializer implements CommandLineRunner {
         // ── Insumos Médicos (4) ─────────────────────────────────────────
         prod("MED-001", "Guantes de Nitrilo Caja x100",     "Guantes desechables talla M, sin polvo, alta resistencia.",     45_000, 50, medica,    "https://picsum.photos/seed/guantes-nitrilo/400/400");
         prod("MED-002", "Mascarillas KN95 Caja x20",        "Protección FFP2, filtrado ≥95%, ajuste nasal moldeable.",       35_000, 80, medica,    "https://picsum.photos/seed/mascarilla-kn95/400/400");
-        prod("MED-003", "Tensiómetro Digital de Brazo",     "Monitor automático, memoria 60 mediciones, manguito 22-42cm.", 185_000, 15, medica,    "https://picsum.photos/seed/tensiómetro/400/400");
+        prod("MED-003", "Tensiómetro Digital de Brazo",     "Monitor automático, memoria 60 mediciones, manguito 22-42cm.", 185_000, 15, medica,    "https://picsum.photos/seed/tensiometro/400/400");
         prod("MED-004", "Termómetro Infrarrojo",            "Sin contacto, resultados en 1 segundo, rango 34-42.9°C.",       89_000, 25, medica,    "https://picsum.photos/seed/termometro/400/400");
 
         // ── Odontología (4) ────────────────────────────────────────────
