@@ -45,9 +45,11 @@ const readNum = (row: ImportRow, keys: string[]): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const resolveCategory = (row: ImportRow, categories: Category[]): string | undefined => {
   const byId = readText(row, ["CategoriaId", "categoryId", "categoriaId"]);
-  if (byId) return byId;
+  if (byId && UUID_RE.test(byId)) return byId;
   const byName = readText(row, ["Categoria", "Categoría", "category", "categoria"]).toLowerCase();
   if (!byName) return undefined;
   return categories.find(
@@ -380,6 +382,8 @@ function InventoryPage() {
     let updated = 0;
     let failed  = 0;
 
+    let firstError = "";
+
     for (const row of preview) {
       if (row.type === "skip") continue;
       try {
@@ -390,8 +394,11 @@ function InventoryPage() {
           await productsApi.create(row.payload);
           created++;
         }
-      } catch {
+      } catch (err: any) {
         failed++;
+        const msg = err?.response?.data?.message ?? err?.response?.data ?? err?.message ?? String(err);
+        console.error(`[Import] fallo fila ${row.sku}:`, err?.response?.status, msg, err?.response?.data);
+        if (!firstError) firstError = `SKU ${row.sku}: ${msg}`;
       }
     }
 
@@ -401,7 +408,10 @@ function InventoryPage() {
     await load().catch(() => {});
 
     if (failed > 0) {
-      toast.warning(`Importacion con errores: ${created} creados, ${updated} actualizados, ${failed} fallidos`);
+      toast.warning(
+        `Importacion con errores: ${created} creados, ${updated} actualizados, ${failed} fallidos` +
+        (firstError ? ` — ${firstError}` : "")
+      );
     } else {
       toast.success(`Importacion completa: ${created} creados, ${updated} actualizados`);
     }
