@@ -77,9 +77,9 @@ function AdminRoles() {
               </div>
               <div>
                 {adding === u.id ? (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 items-center">
                     <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
-                      <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-40 sm:w-44"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {ROLE_KEYS.filter((k) => !u.roles.includes(k)).map((k) => (
                           <SelectItem key={k} value={k}>{ROLE_LABELS[k]}</SelectItem>

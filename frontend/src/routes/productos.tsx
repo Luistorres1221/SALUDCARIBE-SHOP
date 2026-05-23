@@ -8,9 +8,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Package } from "lucide-react";
+import { ChevronDown, Search, Package, SlidersHorizontal } from "lucide-react";
 import { ProductImg } from "@/components/ProductImg";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/productos")({
@@ -30,6 +31,7 @@ function ProductsPage() {
   const [cats, setCats] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -58,11 +60,30 @@ function ProductsPage() {
 
   if (loading || !user) return <div className="p-8 text-center text-muted-foreground">Cargando...</div>;
 
+  const hasActiveFilters = !!(search.cat || search.avail);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex flex-col md:flex-row gap-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      {/* Mobile filter toggle */}
+      <button
+        className="md:hidden w-full flex items-center justify-between px-4 py-2.5 mb-3 rounded-md border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
+        onClick={() => setFiltersOpen((v) => !v)}
+      >
+        <span className="flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4" />
+          Filtros
+          {hasActiveFilters && (
+            <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
+              {(search.cat ? 1 : 0) + (search.avail ? 1 : 0)}
+            </span>
+          )}
+        </span>
+        <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", filtersOpen && "rotate-180")} />
+      </button>
+
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
         {/* Filters */}
-        <aside className="md:w-64 shrink-0 space-y-4">
+        <aside className={cn("md:w-64 shrink-0 space-y-4", !filtersOpen && "hidden md:block")}>
           <Card className="p-4">
             <div className="font-semibold mb-3">Filtros</div>
             <div className="space-y-3">
@@ -119,22 +140,23 @@ function ProductsPage() {
               No se encontraron productos.
             </Card>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {products.map((p) => (
                 <Card key={p.id} className="overflow-hidden shadow-card hover:shadow-lg transition-shadow flex flex-col">
                   <div className="aspect-square bg-muted relative">
                     <ProductImg src={p.imageUrl} alt={p.name} />
                     {p.stock === 0 && (
-                      <Badge variant="destructive" className="absolute top-2 right-2">Agotado</Badge>
+                      <Badge variant="destructive" className="absolute top-2 right-2 text-[10px] sm:text-xs">Agotado</Badge>
                     )}
                   </div>
-                  <div className="p-3 flex-1 flex flex-col">
-                    <div className="text-xs text-muted-foreground">{p.categoryName} · SKU {p.sku}</div>
-                    <div className="font-medium line-clamp-2 mt-1">{p.name}</div>
-                    <div className="font-bold text-lg mt-2">{formatCOP(Number(p.price))}</div>
+                  <div className="p-2 sm:p-3 flex-1 flex flex-col">
+                    <div className="text-xs text-muted-foreground truncate">{p.categoryName}</div>
+                    <div className="font-medium line-clamp-2 mt-1 text-sm sm:text-base">{p.name}</div>
+                    <div className="font-bold text-base sm:text-lg mt-1 sm:mt-2">{formatCOP(Number(p.price))}</div>
                     <div className="text-xs text-muted-foreground mb-2">Stock: {p.stock}</div>
-                    <Button size="sm" className="mt-auto" disabled={p.stock === 0} onClick={() => addItem(p.id)}>
-                      Agregar al carrito
+                    <Button size="sm" className="mt-auto text-xs sm:text-sm" disabled={p.stock === 0} onClick={() => addItem(p.id)}>
+                      <span className="hidden sm:inline">Agregar al carrito</span>
+                      <span className="sm:hidden">Agregar</span>
                     </Button>
                   </div>
                 </Card>

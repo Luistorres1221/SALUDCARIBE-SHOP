@@ -32,11 +32,11 @@ function AdminLayout() {
   if (loading || !isAdmin) return <div className="p-8 text-center text-muted-foreground">Cargando...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex flex-col md:flex-row gap-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
         <aside className="md:w-56 shrink-0">
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-3 px-3">Administración</div>
-          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+          <div className="hidden md:block text-xs font-semibold text-muted-foreground uppercase mb-3 px-3">Administración</div>
+          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-1 md:pb-0 border-b md:border-b-0 mb-2 md:mb-0">
             {NAV.map((n) => {
               const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
               return (
@@ -44,13 +44,14 @@ function AdminLayout() {
                   key={n.to}
                   to={n.to}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-md text-sm whitespace-nowrap transition-colors",
+                    "flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm whitespace-nowrap transition-colors shrink-0",
                     active
                       ? "bg-primary text-primary-foreground font-medium"
                       : "hover:bg-accent"
                   )}
                 >
-                  <n.icon className="w-4 h-4" /> {n.label}
+                  <n.icon className="w-4 h-4 shrink-0" />
+                  <span>{n.label}</span>
                 </Link>
               );
             })}

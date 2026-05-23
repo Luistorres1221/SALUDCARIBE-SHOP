@@ -70,45 +70,54 @@ function CartPage() {
         </h1>
 
         {items.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <Card className="p-8 sm:p-12 text-center">
+            <Package className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground mb-4">Tu carrito está vacío</p>
             <Button asChild><Link to="/productos">Ver productos</Link></Button>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-3">
               {items.map((i) => (
-                <Card key={i.id} className="p-4 flex gap-4 items-center">
-                  <div className="w-20 h-20 rounded-md bg-muted overflow-hidden shrink-0">
-                    {i.productImageUrl ? (
-                      <img src={resolveImageUrl(i.productImageUrl)} alt={i.productName} className="w-full h-full object-cover" />
-                    ) : <Package className="w-full h-full p-5 text-muted-foreground" />}
+                <Card key={i.id} className="p-3 sm:p-4">
+                  <div className="flex gap-3 sm:gap-4">
+                    {/* Imagen */}
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-md bg-muted overflow-hidden shrink-0">
+                      {i.productImageUrl ? (
+                        <img src={resolveImageUrl(i.productImageUrl)} alt={i.productName} className="w-full h-full object-cover" />
+                      ) : <Package className="w-full h-full p-4 text-muted-foreground" />}
+                    </div>
+                    {/* Info + controles */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <div className="font-medium line-clamp-2 text-sm sm:text-base leading-tight">{i.productName}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">SKU {i.productSku}</div>
+                        <div className="font-bold mt-1 text-sm sm:text-base">{formatCOP(Number(i.productPrice))}</div>
+                      </div>
+                      {/* Controles de cantidad y eliminar */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Button size="icon" variant="outline" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => updateQty(i.id, i.quantity - 1)}>
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="w-7 sm:w-8 text-center font-medium text-sm">{i.quantity}</span>
+                          <Button size="icon" variant="outline" className="h-7 w-7 sm:h-8 sm:w-8"
+                            disabled={i.quantity >= i.productStock}
+                            onClick={() => updateQty(i.id, i.quantity + 1)}>
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <Button size="icon" variant="ghost" className="ml-auto h-7 w-7 sm:h-9 sm:w-9" onClick={() => removeItem(i.id)}>
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{i.productName}</div>
-                    <div className="text-sm text-muted-foreground">SKU {i.productSku}</div>
-                    <div className="font-bold mt-1">{formatCOP(Number(i.productPrice))}</div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(i.id, i.quantity - 1)}>
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">{i.quantity}</span>
-                    <Button size="icon" variant="outline" className="h-8 w-8"
-                      disabled={i.quantity >= i.productStock}
-                      onClick={() => updateQty(i.id, i.quantity + 1)}>
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  <Button size="icon" variant="ghost" onClick={() => removeItem(i.id)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
                 </Card>
               ))}
             </div>
 
-            <Card className="p-6 h-fit shadow-card sticky top-24">
+            <Card className="p-4 sm:p-6 h-fit shadow-card lg:sticky lg:top-24">
               <h2 className="font-bold mb-4">Resumen</h2>
               <div className="flex justify-between mb-2">
                 <span className="text-muted-foreground">Productos</span>
@@ -118,7 +127,7 @@ function CartPage() {
                 <span>Total</span>
                 <span>{formatCOP(total)}</span>
               </div>
-              <Button className="w-full mt-6" size="lg" onClick={checkout} disabled={paying}>
+              <Button className="w-full mt-5 sm:mt-6" size="lg" onClick={checkout} disabled={paying}>
                 {paying ? "Procesando..." : "Confirmar pedido"}
               </Button>
               <p className="text-xs text-muted-foreground mt-3 text-center">

@@ -35,9 +35,9 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen gradient-brand flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 shadow-card">
-        <div className="flex flex-col items-center mb-8">
-          <img src={logoImg} alt="SaludCaribe Shop" className="w-24 h-24 rounded-full object-cover mb-3 shadow-md" />
+      <Card className="w-full max-w-md p-5 sm:p-8 shadow-card">
+        <div className="flex flex-col items-center mb-6 sm:mb-8">
+          <img src={logoImg} alt="SaludCaribe Shop" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover mb-3 shadow-md" />
           <h1 className="text-2xl font-bold">SaludCaribe Shop</h1>
           <p className="text-sm text-muted-foreground">Gestión interna de insumos médicos</p>
         </div>

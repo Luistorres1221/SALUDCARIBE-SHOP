@@ -180,8 +180,8 @@ function PreviewDialog({
             No hay cambios para aplicar. Verifica que el Excel tenga la columna <b>SKU</b> y al menos un campo a actualizar.
           </p>
         ) : (
-          <div className="max-h-72 overflow-y-auto border rounded-md">
-            <table className="w-full text-sm">
+          <div className="max-h-72 overflow-y-auto overflow-x-auto border rounded-md">
+            <table className="w-full min-w-[480px] text-sm">
               <thead className="sticky top-0 bg-muted/90 backdrop-blur-sm">
                 <tr>
                   <th className="text-left py-2 px-3 font-medium">Tipo</th>
@@ -428,14 +428,14 @@ function InventoryPage() {
         />
       )}
 
-      <div className="flex justify-between items-center flex-wrap gap-2">
+      <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Inventario</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Inventario</h1>
           <p className="text-sm text-muted-foreground">
             Gestion de stock, costos e importacion masiva de productos.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -443,37 +443,41 @@ function InventoryPage() {
             className="hidden"
             onChange={onFileChange}
           />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-            <FileUp className="w-4 h-4 mr-1" /> Importar Excel
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+            <FileUp className="w-4 h-4 mr-1" />
+            <span className="hidden xs:inline">Importar</span>
+            <span className="xs:hidden">Imp.</span> Excel
           </Button>
-          <Button variant="outline" onClick={exportXLSX}>
-            <Download className="w-4 h-4 mr-1" /> Exportar Excel
+          <Button variant="outline" size="sm" onClick={exportXLSX}>
+            <Download className="w-4 h-4 mr-1" />
+            <span className="hidden xs:inline">Exportar</span>
+            <span className="xs:hidden">Exp.</span> Excel
           </Button>
         </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Productos activos</div>
-          <div className="text-2xl font-bold">{totals.active}</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        <Card className="p-3 sm:p-4">
+          <div className="text-xs text-muted-foreground">Activos</div>
+          <div className="text-xl sm:text-2xl font-bold">{totals.active}</div>
         </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Unidades en stock</div>
-          <div className="text-2xl font-bold">{totals.units}</div>
+        <Card className="p-3 sm:p-4">
+          <div className="text-xs text-muted-foreground">Unidades</div>
+          <div className="text-xl sm:text-2xl font-bold">{totals.units}</div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="text-xs text-muted-foreground">Valor inventario</div>
-          <div className="text-2xl font-bold">{formatCOP(totals.value)}</div>
+          <div className="text-sm sm:text-xl font-bold truncate">{formatCOP(totals.value)}</div>
         </Card>
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="text-xs text-muted-foreground">Stock bajo (≤5)</div>
-          <div className="text-2xl font-bold">{totals.low}</div>
+          <div className="text-xl sm:text-2xl font-bold">{totals.low}</div>
         </Card>
       </div>
 
       {/* Product table */}
-      <Card className="p-4">
+      <Card className="p-3 sm:p-4">
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -484,16 +488,16 @@ function InventoryPage() {
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="py-2 pr-3 font-medium">Producto</th>
-                <th className="py-2 px-3 font-medium">Categoria</th>
-                <th className="py-2 px-3 font-medium w-32">Precio</th>
-                <th className="py-2 px-3 font-medium w-28">Stock</th>
-                <th className="py-2 px-3 font-medium">Estado</th>
-                <th className="py-2 pl-3 font-medium text-right">Accion</th>
+                <th className="py-2 pr-3 pl-3 sm:pl-0 font-medium">Producto</th>
+                <th className="py-2 px-3 font-medium hidden md:table-cell">Categoria</th>
+                <th className="py-2 px-3 font-medium w-28">Precio</th>
+                <th className="py-2 px-3 font-medium w-24">Stock</th>
+                <th className="py-2 px-3 font-medium hidden sm:table-cell">Estado</th>
+                <th className="py-2 px-3 font-medium text-right">Accion</th>
               </tr>
             </thead>
             <tbody>
@@ -501,18 +505,18 @@ function InventoryPage() {
                 const draft = drafts[p.id] ?? { price: Number(p.price), stock: p.stock };
                 return (
                   <tr key={p.id} className="border-b last:border-0">
-                    <td className="py-3 pr-3">
-                      <div className="flex items-center gap-3 min-w-48">
-                        <div className="w-10 h-10 rounded-md bg-muted overflow-hidden shrink-0">
-                          <ProductImg src={p.imageUrl} alt={p.name} iconSize="w-5 h-5" />
+                    <td className="py-3 pr-3 pl-3 sm:pl-0">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-muted overflow-hidden shrink-0">
+                          <ProductImg src={p.imageUrl} alt={p.name} iconSize="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{p.name}</div>
+                          <div className="font-medium truncate max-w-[140px] sm:max-w-[200px]">{p.name}</div>
                           <div className="text-xs text-muted-foreground">SKU {p.sku}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-muted-foreground">{p.categoryName ?? "Sin categoria"}</td>
+                    <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{p.categoryName ?? "Sin categoria"}</td>
                     <td className="py-3 px-3">
                       <Input
                         type="number"
@@ -531,22 +535,23 @@ function InventoryPage() {
                         onChange={(e) => updateDraft(p.id, { stock: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3 hidden sm:table-cell">
                       {draft.stock <= 0 ? (
                         <Badge variant="destructive">Agotado</Badge>
                       ) : draft.stock <= 5 ? (
                         <Badge variant="secondary">Bajo</Badge>
                       ) : (
-                        <Badge variant="outline">Disponible</Badge>
+                        <Badge variant="outline">OK</Badge>
                       )}
                     </td>
-                    <td className="py-3 pl-3 text-right">
+                    <td className="py-3 px-3 text-right">
                       <Button
                         size="sm"
                         onClick={() => saveProduct(p)}
                         disabled={savingId === p.id}
                       >
-                        <Save className="w-4 h-4 mr-1" /> Guardar
+                        <Save className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Guardar</span>
                       </Button>
                     </td>
                   </tr>

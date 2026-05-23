@@ -99,16 +99,16 @@ function OrderDetail() {
         </Card>
       )}
 
-      <Card className="p-6 shadow-card">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h1 className="text-xl font-bold">
+      <Card className="p-4 sm:p-6 shadow-card">
+        <div className="flex flex-wrap justify-between items-start gap-2 mb-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold">
               Pedido #{order.id.slice(0, 8)}
             </h1>
             <p className="text-sm text-muted-foreground">
               {new Date(order.createdAt).toLocaleString("es-CO")}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground truncate max-w-xs sm:max-w-none">
               {order.userFullName}{" "}
               {order.userEmail && `· ${order.userEmail}`}
               {order.userArea && ` · ${order.userArea}`}

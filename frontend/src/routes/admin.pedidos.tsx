@@ -306,32 +306,32 @@ function AdminOrders() {
             </Card>
           )}
           {filtered.map((o) => (
-            <Card key={o.id} className="p-4 flex flex-wrap items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{o.userFullName}</div>
-                <div className="text-xs text-muted-foreground">
-                  #{o.id.slice(0, 8)} ·{" "}
-                  {new Date(o.createdAt).toLocaleString("es-CO")}
-                  {o.userArea && ` · ${o.userArea}`}
+            <Card key={o.id} className="p-3 sm:p-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{o.userFullName}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    #{o.id.slice(0, 8)} ·{" "}
+                    {new Date(o.createdAt).toLocaleString("es-CO")}
+                    {o.userArea && ` · ${o.userArea}`}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge className={STATUS_COLOR[o.status]}>
+                    {STATUS_LABEL[o.status]}
+                  </Badge>
+                  <div className="font-bold text-sm sm:text-base">{formatCOP(Number(o.total))}</div>
                 </div>
               </div>
-              <Badge className={STATUS_COLOR[o.status]}>
-                {STATUS_LABEL[o.status]}
-              </Badge>
-              <div className="font-bold">{formatCOP(Number(o.total))}</div>
-              <div className="flex gap-1 items-center">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => openDetail(o)}
-                >
-                  <Eye className="w-4 h-4" />
+              <div className="flex flex-wrap gap-1 items-center mt-2 pt-2 border-t border-border/50">
+                <Button size="sm" variant="ghost" onClick={() => openDetail(o)} className="h-8 gap-1.5">
+                  <Eye className="w-4 h-4" /> Ver detalle
                 </Button>
                 <Select
                   value={o.status}
                   onValueChange={(v) => updateStatus(o.id, v as OrderStatus)}
                 >
-                  <SelectTrigger className="w-36 h-8 text-xs">
+                  <SelectTrigger className="w-36 h-8 text-xs ml-auto">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -351,7 +351,7 @@ function AdminOrders() {
       {/* RF-047 a RF-060: Diálogo de detalle */}
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         {detail && (
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3 flex-wrap">
                 Pedido #{detail.id.slice(0, 8)}
@@ -363,7 +363,7 @@ function AdminOrders() {
 
             <div className="space-y-5">
               {/* Información del usuario */}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm bg-muted/40 rounded-lg p-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm bg-muted/40 rounded-lg p-3">
                 <div>
                   <span className="text-muted-foreground">Usuario: </span>
                   <span className="font-medium">{detail.userFullName}</span>

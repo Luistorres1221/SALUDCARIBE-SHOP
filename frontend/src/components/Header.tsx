@@ -31,26 +31,26 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 gradient-brand border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={logoImg} alt="SaludCaribe Shop" className="w-10 h-10 rounded-full object-cover bg-white ring-2 ring-white/40 shadow-md" />
-          <span className="font-bold text-lg text-brand-foreground hidden sm:inline tracking-tight">SaludCaribe<span className="opacity-80 font-medium"> Shop</span></span>
+          <img src={logoImg} alt="SaludCaribe Shop" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover bg-white ring-2 ring-white/40 shadow-md" />
+          <span className="font-bold text-base sm:text-lg text-brand-foreground hidden sm:inline tracking-tight">SaludCaribe<span className="opacity-80 font-medium"> Shop</span></span>
         </Link>
 
-        <form onSubmit={onSearch} className="flex-1 max-w-2xl">
+        <form onSubmit={onSearch} className="flex-1 min-w-0 max-w-2xl">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar insumos médicos, odontológicos, aseo..."
-              className="w-full h-10 pl-10 pr-4 rounded-md bg-card border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Buscar productos..."
+              className="w-full h-9 sm:h-10 pl-9 sm:pl-10 pr-3 sm:pr-4 rounded-md bg-card border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </form>
 
         {user ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {isAdmin && (
               <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex text-brand-foreground hover:bg-card/40">
                 <Link to="/admin">
