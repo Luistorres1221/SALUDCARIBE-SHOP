@@ -28,7 +28,7 @@ apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
     const status = error.response?.status;
-    if (!_suppressAuthRedirect && (status === 401 || status === 403)) {
+    if (!_suppressAuthRedirect && status === 401) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("authUser");

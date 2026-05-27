@@ -39,6 +39,10 @@ export interface Order {
   userFullName: string;
   userEmail: string;
   userArea: string | null;
+  costCenterId: string | null;
+  costCenterName: string | null;
+  dependencyId: string | null;
+  dependencyName: string | null;
   status: OrderStatus;
   total: number;
   notes: string | null;
@@ -70,8 +74,10 @@ export const ordersApi = {
   getById: (id: string) =>
     apiClient.get<Order>(`/api/orders/${id}`).then((r) => r.data),
 
-  create: (notes?: string) =>
-    apiClient.post<Order>("/api/orders", { notes }).then((r) => r.data),
+  create: (costCenterId: string, dependencyId: string, notes?: string) =>
+    apiClient
+      .post<Order>("/api/orders", { costCenterId, dependencyId, notes })
+      .then((r) => r.data),
 
   updateStatus: (id: string, status: OrderStatus) =>
     apiClient

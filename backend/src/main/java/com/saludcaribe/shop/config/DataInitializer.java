@@ -43,19 +43,45 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
+    private static final String ADMIN_EMAIL    = "admin@saludcaribe.com";
+    private static final String ADMIN_PASSWORD = "Admin1234!";
+
     private void seedAdmin() {
-        if (!userRepository.existsByEmail("admin@saludcaribe.com")) {
-            User admin = User.builder()
-                    .email("admin@saludcaribe.com")
-                    .password(passwordEncoder.encode("Admin1234!"))
-                    .fullName("Administrador")
-                    .area("Administración")
-                    .createdAt(LocalDateTime.now())
-                    .roles(new ArrayList<>(List.of(AppRole.admin)))
-                    .build();
-            userRepository.save(admin);
-            log.info("Admin creado: admin@saludcaribe.com / Admin1234!");
-        }
+        userRepository.findByEmail(ADMIN_EMAIL).ifPresentOrElse(
+            existing -> {
+                boolean changed = false;
+
+                if (!passwordEncoder.matches(ADMIN_PASSWORD, existing.getPassword())) {
+                    existing.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
+                    changed = true;
+                    log.info("Admin password corregido para: {}", ADMIN_EMAIL);
+                }
+
+                if (existing.getRoles() == null || !existing.getRoles().contains(AppRole.admin)) {
+                    if (existing.getRoles() == null) {
+                        existing.setRoles(new ArrayList<>(List.of(AppRole.admin)));
+                    } else {
+                        existing.getRoles().add(AppRole.admin);
+                    }
+                    changed = true;
+                    log.warn("Rol 'admin' restaurado para: {}", ADMIN_EMAIL);
+                }
+
+                if (changed) userRepository.save(existing);
+            },
+            () -> {
+                User admin = User.builder()
+                        .email(ADMIN_EMAIL)
+                        .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .fullName("Administrador")
+                        .area("Administración")
+                        .createdAt(LocalDateTime.now())
+                        .roles(new ArrayList<>(List.of(AppRole.admin)))
+                        .build();
+                userRepository.save(admin);
+                log.info("Admin creado: {} / {}", ADMIN_EMAIL, ADMIN_PASSWORD);
+            }
+        );
     }
 
     private void seedCategoriesAndProducts() {

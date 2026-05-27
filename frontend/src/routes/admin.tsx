@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { Boxes, LayoutDashboard, Package, Tag, ShoppingCart, Users, Shield } from "lucide-react";
+import { BarChart3, Boxes, Building2, FlaskConical, LayoutDashboard, Layers, Package, Tag, ShoppingCart, Users, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
@@ -14,8 +14,12 @@ const NAV = [
   { to: "/admin/productos", label: "Productos", icon: Package },
   { to: "/admin/categorias", label: "Categorías", icon: Tag },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
+  { to: "/admin/centros-costo", label: "Centros de Costo", icon: Building2 },
+  { to: "/admin/dependencias", label: "Dependencias", icon: Layers },
   { to: "/admin/usuarios", label: "Usuarios", icon: Users },
   { to: "/admin/roles", label: "Roles", icon: Shield },
+  { to: "/admin/lotes", label: "Lotes/Venc.", icon: FlaskConical },
+  { to: "/admin/reportes", label: "Reportes", icon: BarChart3 },
 ];
 
 function AdminLayout() {

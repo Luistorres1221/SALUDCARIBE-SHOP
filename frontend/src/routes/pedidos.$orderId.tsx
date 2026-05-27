@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCOP } from "@/lib/cart-context";
-import { ArrowLeft, CheckCircle2, Truck, Clock } from "lucide-react";
+import { ArrowLeft, Building2, CheckCircle2, Clock, Layers, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/pedidos/$orderId")({
   component: OrderDetail,
@@ -113,6 +113,22 @@ function OrderDetail() {
               {order.userEmail && `· ${order.userEmail}`}
               {order.userArea && ` · ${order.userArea}`}
             </p>
+            {(order.costCenterName || order.dependencyName) && (
+              <div className="flex flex-wrap gap-3 mt-1.5">
+                {order.costCenterName && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full">
+                    <Building2 className="w-3 h-3" />
+                    {order.costCenterName}
+                  </span>
+                )}
+                {order.dependencyName && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full">
+                    <Layers className="w-3 h-3" />
+                    {order.dependencyName}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <Badge className={STATUS_COLOR[order.status]}>
             {STATUS_LABEL[order.status] ?? order.status}

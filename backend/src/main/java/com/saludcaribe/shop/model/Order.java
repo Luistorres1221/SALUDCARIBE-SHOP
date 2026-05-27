@@ -25,6 +25,11 @@ public class Order {
     private String userEmail;
     private String userArea;
 
+    private UUID costCenterId;
+    private String costCenterName;
+    private UUID dependencyId;
+    private String dependencyName;
+
     @Column(precision = 12, scale = 2)
     private BigDecimal total;
 

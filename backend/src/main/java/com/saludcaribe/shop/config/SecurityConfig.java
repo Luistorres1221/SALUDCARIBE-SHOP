@@ -44,6 +44,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/uploads").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/cost-centers").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/dependencies").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("admin")
                         .anyRequest().authenticated()
                 )

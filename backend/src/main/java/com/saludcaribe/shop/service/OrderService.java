@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.saludcaribe.shop.repository.CostCenterRepository;
+import com.saludcaribe.shop.repository.DependencyRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,8 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderDeliveryRepository orderDeliveryRepository;
+    private final CostCenterRepository costCenterRepository;
+    private final DependencyRepository dependencyRepository;
 
     public List<OrderResponse> getMyOrders(UUID userId) {
         return orderRepository.findByUserId(userId).stream().map(this::toResponse).toList();
@@ -46,6 +50,18 @@ public class OrderService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        CostCenter costCenter = costCenterRepository.findById(req.getCostCenterId())
+                .orElseThrow(() -> new IllegalArgumentException("Centro de costo no encontrado"));
+        if (!costCenter.isActive()) {
+            throw new IllegalArgumentException("El centro de costo seleccionado no está activo");
+        }
+
+        Dependency dependency = dependencyRepository.findById(req.getDependencyId())
+                .orElseThrow(() -> new IllegalArgumentException("Dependencia no encontrada"));
+        if (!dependency.isActive()) {
+            throw new IllegalArgumentException("La dependencia seleccionada no está activa");
+        }
 
         for (CartItem item : cartItems) {
             Product product = productRepository.findById(item.getProductId())
@@ -76,6 +92,10 @@ public class OrderService {
                 .userFullName(user.getFullName())
                 .userEmail(user.getEmail())
                 .userArea(user.getArea())
+                .costCenterId(costCenter.getId())
+                .costCenterName(costCenter.getName())
+                .dependencyId(dependency.getId())
+                .dependencyName(dependency.getName())
                 .total(total)
                 .notes(req.getNotes())
                 .status(OrderStatus.pendiente)
@@ -237,6 +257,10 @@ public class OrderService {
                 .userFullName(o.getUserFullName())
                 .userEmail(o.getUserEmail())
                 .userArea(o.getUserArea())
+                .costCenterId(o.getCostCenterId())
+                .costCenterName(o.getCostCenterName())
+                .dependencyId(o.getDependencyId())
+                .dependencyName(o.getDependencyName())
                 .status(o.getStatus())
                 .total(o.getTotal())
                 .notes(o.getNotes())

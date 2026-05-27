@@ -314,6 +314,8 @@ function AdminOrders() {
                     #{o.id.slice(0, 8)} ·{" "}
                     {new Date(o.createdAt).toLocaleString("es-CO")}
                     {o.userArea && ` · ${o.userArea}`}
+                    {o.costCenterName && ` · CC: ${o.costCenterName}`}
+                    {o.dependencyName && ` · ${o.dependencyName}`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -376,6 +378,18 @@ function AdminOrders() {
                   <div>
                     <span className="text-muted-foreground">Área: </span>
                     {detail.userArea}
+                  </div>
+                )}
+                {detail.costCenterName && (
+                  <div>
+                    <span className="text-muted-foreground">Centro de costo: </span>
+                    <span className="font-medium">{detail.costCenterName}</span>
+                  </div>
+                )}
+                {detail.dependencyName && (
+                  <div>
+                    <span className="text-muted-foreground">Dependencia: </span>
+                    <span className="font-medium">{detail.dependencyName}</span>
                   </div>
                 )}
                 <div>

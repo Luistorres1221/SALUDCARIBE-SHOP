@@ -17,6 +17,10 @@ public class OrderResponse {
     private String userFullName;
     private String userEmail;
     private String userArea;
+    private UUID costCenterId;
+    private String costCenterName;
+    private UUID dependencyId;
+    private String dependencyName;
     private OrderStatus status;
     private BigDecimal total;
     private String notes;
