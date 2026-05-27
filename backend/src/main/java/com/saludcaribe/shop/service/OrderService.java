@@ -25,6 +25,7 @@ public class OrderService {
     private final OrderDeliveryRepository orderDeliveryRepository;
     private final CostCenterRepository costCenterRepository;
     private final DependencyRepository dependencyRepository;
+    private final EmailService emailService;
 
     public List<OrderResponse> getMyOrders(UUID userId) {
         return orderRepository.findByUserId(userId).stream().map(this::toResponse).toList();
@@ -105,7 +106,9 @@ public class OrderService {
 
         orderRepository.save(order);
         cartItemRepository.deleteByUserId(userId);
-        return toResponse(order);
+        OrderResponse response = toResponse(order);
+        emailService.sendOrderConfirmation(response);
+        return response;
     }
 
     public OrderResponse updateStatus(UUID id, OrderStatus status) {
