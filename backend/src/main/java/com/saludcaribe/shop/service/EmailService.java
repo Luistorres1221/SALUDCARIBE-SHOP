@@ -1,10 +1,10 @@
 package com.saludcaribe.shop.service;
 
 import com.saludcaribe.shop.dto.order.OrderResponse;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -22,22 +22,30 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Value("${spring.mail.username:}")
+    private String fromAddress;
+
     private static final String BRAND_COLOR = "#2563eb";
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final NumberFormat COP = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
 
     @Async
     public void sendOrderConfirmation(OrderResponse order) {
+        if (fromAddress == null || fromAddress.isBlank()) {
+            log.warn("MAIL_USERNAME no configurado — se omite el envío de email para pedido {}", order.getId());
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromAddress, "SALUDCARIBE SHOP");
             helper.setTo(order.getUserEmail());
             helper.setSubject("Pedido #" + order.getId().toString().substring(0, 8).toUpperCase() + " recibido — SALUDCARIBE SHOP");
             helper.setText(buildOrderHtml(order), true);
             mailSender.send(message);
             log.info("Email de confirmación enviado a {}", order.getUserEmail());
-        } catch (MessagingException e) {
-            log.error("Error enviando email de confirmación al pedido {}: {}", order.getId(), e.getMessage());
+        } catch (Exception e) {
+            log.error("Error enviando email de confirmación al pedido {}: {}", order.getId(), e.getMessage(), e);
         }
     }
 
