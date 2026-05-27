@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,9 +26,8 @@ public class EmailService {
 
     private static final String BRAND_COLOR = "#2563eb";
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final NumberFormat COP = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+    private static final NumberFormat COP = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO"));
 
-    @Async
     public void sendOrderConfirmation(OrderResponse order) {
         if (fromAddress == null || fromAddress.isBlank()) {
             log.warn("MAIL_USERNAME no configurado — se omite el envío de email para pedido {}", order.getId());
