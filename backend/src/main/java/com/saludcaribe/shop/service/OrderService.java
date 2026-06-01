@@ -5,6 +5,7 @@ import com.saludcaribe.shop.model.*;
 import com.saludcaribe.shop.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ public class OrderService {
     private final CostCenterRepository costCenterRepository;
     private final DependencyRepository dependencyRepository;
     private final EmailService emailService;
+    private final InventoryService inventoryService;
 
     public List<OrderResponse> getMyOrders(UUID userId) {
         return orderRepository.findByUserId(userId).stream().map(this::toResponse).toList();
@@ -123,7 +125,8 @@ public class OrderService {
     }
 
     // RF-048 a RF-057: gestión de entregas parciales con historial
-    public OrderResponse deliverItems(UUID orderId, DeliverOrderRequest req, String adminEmail) {
+    @Transactional
+    public OrderResponse deliverItems(UUID orderId, DeliverOrderRequest req, UUID adminId, String adminName, String adminEmail) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado"));
 
@@ -153,12 +156,15 @@ public class OrderService {
             item.setDeliveredQty(newDelivered);
 
             if (dr.getDeliveredQty() > 0) {
-                // Decrement inventory when physically delivered
-                if (item.getProductId() != null) {
-                    productRepository.findById(item.getProductId()).ifPresent(product -> {
-                        product.setStock(Math.max(0, product.getStock() - dr.getDeliveredQty()));
-                        productRepository.save(product);
-                    });
+                if (req.getWarehouseId() != null && item.getProductId() != null) {
+                    inventoryService.deductStock(
+                            req.getWarehouseId(), item.getProductId(), dr.getDeliveredQty(),
+                            MovementType.SALIDA_ENTREGA, orderId, "ORDER",
+                            "Pedido #" + orderId.toString().substring(0, 8)
+                                    + " — entregado a: " + order.getUserFullName()
+                                    + " (" + order.getUserEmail() + ")",
+                            adminId, adminName
+                    );
                 }
                 deliveryItems.add(OrderDeliveryItem.builder()
                         .itemId(item.getId())

@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -65,9 +64,11 @@ public class OrderController {
     public OrderResponse deliver(
             @PathVariable UUID id,
             @Valid @RequestBody DeliverOrderRequest req,
-            Authentication authentication
+            @AuthenticationPrincipal UserDetails ud
     ) {
-        return orderService.deliverItems(id, req, authentication.getName());
+        User admin = userRepository.findByEmail(ud.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
+        return orderService.deliverItems(id, req, admin.getId(), admin.getFullName(), admin.getEmail());
     }
 
     // RF-059: cancelación de pedidos

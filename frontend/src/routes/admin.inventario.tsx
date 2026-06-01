@@ -1,259 +1,402 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { categoriesApi, type Category } from "@/api/categories";
-import { productsApi, type Product, type ProductRequest } from "@/api/products";
+import { inventoryApi, type WarehouseStock } from "@/api/inventory";
+import { warehousesApi, type Warehouse } from "@/api/warehouses";
+import { productsApi, type Product } from "@/api/products";
+import { transfersApi } from "@/api/transfers";
 import { suppressAuthRedirect } from "@/api/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { formatCOP } from "@/lib/cart-context";
-import { Download, FileUp, Save, Search } from "lucide-react";
-import { ProductImg } from "@/components/ProductImg";
+import { ArrowLeftRight, Download, FileUp, PackageCheck, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin/inventario")({
-  component: InventoryPage,
+  component: InventarioPrincipalPage,
 });
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── CSV helpers ───────────────────────────────────────────────────────────────
 
-type Draft = { price: number; stock: number };
-type ImportRow = Record<string, unknown>;
+function downloadCSV(filename: string, rows: Record<string, unknown>[]) {
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0]);
+  const lines = [
+    headers.join(";"),
+    ...rows.map((r) =>
+      headers
+        .map((h) => {
+          const v = r[h] ?? "";
+          const s = String(v);
+          return s.includes(";") || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+        })
+        .join(";")
+    ),
+  ];
+  const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
-type PreviewRow =
-  | { type: "update"; sku: string; name: string; id: string; payload: ProductRequest; fields: string[] }
-  | { type: "create"; sku: string; name: string; payload: ProductRequest }
-  | { type: "skip";   sku: string; name: string; reason: string };
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const readText = (row: ImportRow, keys: string[]): string => {
-  for (const k of keys) {
-    const v = row[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
-  }
-  return "";
-};
-
-const readNum = (row: ImportRow, keys: string[]): number | undefined => {
-  const raw = readText(row, keys);
-  if (raw === "") return undefined;
-  const n = Number(raw.replace(/\$/g, "").replace(/\./g, "").replace(",", "."));
-  return Number.isFinite(n) ? n : undefined;
-};
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const resolveCategory = (row: ImportRow, categories: Category[]): string | undefined => {
-  const byId = readText(row, ["CategoriaId", "categoryId", "categoriaId"]);
-  if (byId && UUID_RE.test(byId)) return byId;
-  const byName = readText(row, ["Categoria", "Categoría", "category", "categoria"]).toLowerCase();
-  if (!byName) return undefined;
-  return categories.find(
-    (c) => c.name.toLowerCase() === byName || c.slug.toLowerCase() === byName
-  )?.id;
-};
-
-function parseExcelRows(
-  rows: ImportRow[],
-  products: Product[],
-  categories: Category[]
-): PreviewRow[] {
-  return rows.map((row): PreviewRow => {
-    const sku = readText(row, ["SKU", "sku"]);
-    if (!sku) return { type: "skip", sku: "", name: "", reason: "Fila sin SKU" };
-
-    const name  = readText(row, ["Nombre", "name", "Producto"]);
-    const desc  = readText(row, ["Descripcion", "Descripción", "description"]);
-    const price = readNum(row, ["Precio", "price"]);
-    const stock = readNum(row, ["Stock", "stock", "Inventario"]);
-    const image = readText(row, ["Imagen", "imageUrl", "ImagenUrl", "URL Imagen"]);
-    const catId = resolveCategory(row, categories);
-
-    const existing = products.find((p) => p.sku.toLowerCase() === sku.toLowerCase());
-
-    if (existing) {
-      // Merge: Excel values override existing; missing Excel fields keep current DB value
-      const mergedName  = name  || existing.name;
-      const mergedDesc  = desc  !== "" ? desc : (existing.description ?? "");
-      const mergedPrice = price !== undefined ? price : Number(existing.price);
-      const mergedStock = stock !== undefined ? Math.max(0, Math.trunc(stock)) : existing.stock;
-      const mergedImage = image || existing.imageUrl || undefined;
-      const mergedCatId = catId || existing.categoryId || undefined;
-
-      // Detect which fields the Excel actually provides (to show in preview)
-      const fields: string[] = [];
-      if (name)              fields.push("Nombre");
-      if (desc !== "")       fields.push("Descripcion");
-      if (price !== undefined) fields.push("Precio");
-      if (stock !== undefined) fields.push("Stock");
-      if (image)             fields.push("Imagen");
-      if (catId)             fields.push("Categoria");
-
-      if (fields.length === 0)
-        return { type: "skip", sku, name: existing.name, reason: "Sin campos para actualizar" };
-
-      return {
-        type: "update",
-        sku,
-        name: existing.name,
-        id: existing.id,
-        fields,
-        payload: {
-          sku: existing.sku,
-          name: mergedName,
-          description: mergedDesc,
-          price: mergedPrice,
-          stock: mergedStock,
-          imageUrl: mergedImage,
-          categoryId: mergedCatId,
-        },
-      };
-    }
-
-    // New product — name is required
-    if (!name)
-      return { type: "skip", sku, name: "", reason: "Producto nuevo sin Nombre" };
-
-    return {
-      type: "create",
-      sku,
-      name,
-      payload: {
-        sku,
-        name,
-        description: desc || "",
-        price: price ?? 0,
-        stock: stock !== undefined ? Math.max(0, Math.trunc(stock)) : 0,
-        imageUrl: image || undefined,
-        categoryId: catId || undefined,
-      },
-    };
+function parseCSV(text: string): Record<string, string>[] {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().split("\n");
+  if (lines.length < 2) return [];
+  const delim = lines[0].includes(";") ? ";" : ",";
+  const headers = lines[0].split(delim).map((h) => h.trim().replace(/^"|"$/g, ""));
+  return lines.slice(1).map((line) => {
+    const vals = line.split(delim).map((v) => v.trim().replace(/^"|"$/g, ""));
+    return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? ""]));
   });
 }
 
-// ── Preview Dialog ────────────────────────────────────────────────────────────
+// ── Entry Dialog ──────────────────────────────────────────────────────────────
 
-function PreviewDialog({
-  rows,
-  onConfirm,
-  onCancel,
-  loading,
+function EntryDialog({
+  warehouseId,
+  products,
+  initial,
+  onClose,
+  onSaved,
 }: {
-  rows: PreviewRow[];
-  onConfirm: () => void;
-  onCancel: () => void;
-  loading: boolean;
+  warehouseId: string;
+  products: Product[];
+  initial?: string;
+  onClose: () => void;
+  onSaved: () => void;
 }) {
-  const updates = rows.filter((r) => r.type === "update");
-  const creates = rows.filter((r) => r.type === "create");
-  const skips   = rows.filter((r) => r.type === "skip");
-  const total   = updates.length + creates.length;
+  const [productId, setProductId] = useState(initial ?? "");
+  const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!productId || qty <= 0) {
+      toast.error("Selecciona producto y cantidad válida");
+      return;
+    }
+    setSaving(true);
+    try {
+      await inventoryApi.recordEntry({ warehouseId, productId, quantity: qty, notes: notes || undefined });
+      toast.success("Entrada registrada");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? "Error al registrar entrada");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open && !loading) onCancel(); }}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open onOpenChange={(o) => { if (!o && !saving) onClose(); }}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Vista previa de importacion</DialogTitle>
+          <DialogTitle>Registrar Entrada</DialogTitle>
         </DialogHeader>
-
-        {/* Summary badges */}
-        <div className="flex gap-3 flex-wrap">
-          <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
-            ✏️ {updates.length} actualizaciones
-          </Badge>
-          <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
-            ➕ {creates.length} nuevos
-          </Badge>
-          {skips.length > 0 && (
-            <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50">
-              ⚠️ {skips.length} omitidos
-            </Badge>
-          )}
+        <div className="space-y-4">
+          <div>
+            <Label>Producto</Label>
+            <Select value={productId} onValueChange={setProductId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona producto..." />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} — SKU {p.sku}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Cantidad</Label>
+            <Input
+              type="number"
+              min={1}
+              value={qty}
+              onChange={(e) => setQty(Number(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label>Notas</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Opcional..."
+              rows={2}
+            />
+          </div>
         </div>
-
-        {total === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            No hay cambios para aplicar. Verifica que el Excel tenga la columna <b>SKU</b> y al menos un campo a actualizar.
-          </p>
-        ) : (
-          <div className="max-h-72 overflow-y-auto overflow-x-auto border rounded-md">
-            <table className="w-full min-w-[480px] text-sm">
-              <thead className="sticky top-0 bg-muted/90 backdrop-blur-sm">
-                <tr>
-                  <th className="text-left py-2 px-3 font-medium">Tipo</th>
-                  <th className="text-left py-2 px-3 font-medium">SKU</th>
-                  <th className="text-left py-2 px-3 font-medium">Nombre</th>
-                  <th className="text-left py-2 px-3 font-medium">Campos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {updates.map((r, i) =>
-                  r.type === "update" && (
-                    <tr key={i} className="border-t hover:bg-muted/30">
-                      <td className="py-2 px-3 text-blue-600 font-medium whitespace-nowrap">✏️ Actualizar</td>
-                      <td className="py-2 px-3 font-mono text-xs">{r.sku}</td>
-                      <td className="py-2 px-3 truncate max-w-[180px]">{r.name}</td>
-                      <td className="py-2 px-3 text-muted-foreground text-xs">{r.fields.join(", ")}</td>
-                    </tr>
-                  )
-                )}
-                {creates.map((r, i) =>
-                  r.type === "create" && (
-                    <tr key={`c${i}`} className="border-t hover:bg-muted/30">
-                      <td className="py-2 px-3 text-green-600 font-medium whitespace-nowrap">➕ Crear</td>
-                      <td className="py-2 px-3 font-mono text-xs">{r.sku}</td>
-                      <td className="py-2 px-3 truncate max-w-[180px]">{r.name}</td>
-                      <td className="py-2 px-3 text-muted-foreground text-xs">Producto nuevo</td>
-                    </tr>
-                  )
-                )}
-                {skips.map((r, i) =>
-                  r.type === "skip" && (
-                    <tr key={`s${i}`} className="border-t bg-muted/20">
-                      <td className="py-2 px-3 text-yellow-600 whitespace-nowrap">⚠️ Omitir</td>
-                      <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{r.sku || "—"}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{r.name || "—"}</td>
-                      <td className="py-2 px-3 text-muted-foreground text-xs">{r.reason}</td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Column reference */}
-        <details className="text-xs text-muted-foreground border rounded-md px-3 py-2">
-          <summary className="cursor-pointer select-none hover:text-foreground font-medium">
-            Columnas reconocidas en el Excel
-          </summary>
-          <div className="mt-2 grid grid-cols-2 gap-1 pl-1">
-            <span><b>SKU</b> — identificador (requerido)</span>
-            <span><b>Nombre</b> — nombre del producto</span>
-            <span><b>Descripcion</b> — descripcion</span>
-            <span><b>Precio</b> — precio en COP</span>
-            <span><b>Stock</b> — unidades disponibles</span>
-            <span><b>Categoria</b> — nombre o slug</span>
-            <span><b>CategoriaId</b> — UUID de categoria</span>
-            <span><b>Imagen</b> — URL de imagen</span>
-          </div>
-          <p className="mt-2 text-muted-foreground">
-            Solo incluye las columnas que quieras actualizar. Los campos no incluidos mantienen su valor actual.
-          </p>
-        </details>
-
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={onConfirm} disabled={loading || total === 0}>
-            {loading
-              ? `Importando...`
-              : `Confirmar (${total} fila${total !== 1 ? "s" : ""})`}
+          <Button onClick={submit} disabled={saving}>
+            {saving ? "Guardando..." : "Registrar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Adjust Dialog ─────────────────────────────────────────────────────────────
+
+function AdjustDialog({
+  warehouseId,
+  products,
+  initial,
+  onClose,
+  onSaved,
+}: {
+  warehouseId: string;
+  products: Product[];
+  initial?: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [productId, setProductId] = useState(initial ?? "");
+  const [type, setType] = useState<"AJUSTE_POSITIVO" | "AJUSTE_NEGATIVO">("AJUSTE_POSITIVO");
+  const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!productId || qty <= 0) {
+      toast.error("Selecciona producto y cantidad válida");
+      return;
+    }
+    setSaving(true);
+    try {
+      await inventoryApi.adjustStock({ warehouseId, productId, type, quantity: qty, notes: notes || undefined });
+      toast.success("Ajuste aplicado");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? "Error al ajustar stock");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o && !saving) onClose(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ajustar Stock</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Producto</Label>
+            <Select value={productId} onValueChange={setProductId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona producto..." />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} — SKU {p.sku}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Tipo de ajuste</Label>
+            <Select value={type} onValueChange={(v) => setType(v as "AJUSTE_POSITIVO" | "AJUSTE_NEGATIVO")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AJUSTE_POSITIVO">Ajuste Positivo (+)</SelectItem>
+                <SelectItem value="AJUSTE_NEGATIVO">Ajuste Negativo (-)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Cantidad</Label>
+            <Input
+              type="number"
+              min={1}
+              value={qty}
+              onChange={(e) => setQty(Number(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label>Notas</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Motivo del ajuste..."
+              rows={2}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? "Aplicando..." : "Aplicar ajuste"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Transfer Dialog ───────────────────────────────────────────────────────────
+
+type TransferLine = { productId: string; quantity: number };
+
+function TransferDialog({
+  mainWarehouse,
+  subWarehouses,
+  stock,
+  onClose,
+  onSaved,
+}: {
+  mainWarehouse: Warehouse;
+  subWarehouses: Warehouse[];
+  stock: WarehouseStock[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [toId, setToId] = useState("");
+  const [lines, setLines] = useState<TransferLine[]>([{ productId: "", quantity: 1 }]);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const addLine = () => setLines((l) => [...l, { productId: "", quantity: 1 }]);
+
+  const setLine = (i: number, patch: Partial<TransferLine>) =>
+    setLines((l) => l.map((ln, idx) => (idx === i ? { ...ln, ...patch } : ln)));
+
+  const removeLine = (i: number) => setLines((l) => l.filter((_, idx) => idx !== i));
+
+  const submit = async () => {
+    if (!toId) {
+      toast.error("Selecciona bodega destino");
+      return;
+    }
+    const validLines = lines.filter((l) => l.productId && l.quantity > 0);
+    if (validLines.length === 0) {
+      toast.error("Agrega al menos un producto con cantidad válida");
+      return;
+    }
+    setSaving(true);
+    try {
+      await transfersApi.create({
+        fromWarehouseId: mainWarehouse.id,
+        toWarehouseId: toId,
+        notes: notes || undefined,
+        items: validLines.map((l) => ({ productId: l.productId, requestedQuantity: l.quantity })),
+      });
+      toast.success("Traslado creado exitosamente");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? "Error al crear traslado");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o && !saving) onClose(); }}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Crear Traslado desde Almacén Principal</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Origen (fijo)</Label>
+              <Input value={mainWarehouse.name} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Destino</Label>
+              <Select value={toId} onValueChange={setToId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona bodega..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {subWarehouses.map((w) => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Productos a trasladar</Label>
+            {lines.map((line, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <Select
+                  value={line.productId}
+                  onValueChange={(v) => setLine(i, { productId: v })}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Producto..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stock.map((s) => (
+                      <SelectItem key={s.productId} value={s.productId}>
+                        {s.productName} (Stock: {s.quantity})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  min={1}
+                  value={line.quantity}
+                  className="w-20 shrink-0"
+                  onChange={(e) => setLine(i, { quantity: Number(e.target.value) })}
+                />
+                {lines.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 px-2"
+                    onClick={() => removeLine(i)}
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={addLine}>
+              <Plus className="w-4 h-4 mr-1" /> Agregar producto
+            </Button>
+          </div>
+
+          <div>
+            <Label>Notas</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Opcional..."
+              rows={2}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? "Creando..." : "Crear Traslado"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -263,300 +406,360 @@ function PreviewDialog({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-function InventoryPage() {
+type DialogType = "entry" | "adjust" | "transfer" | null;
+
+function InventarioPrincipalPage() {
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [stock, setStock]           = useState<WarehouseStock[]>([]);
   const [products, setProducts]     = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [drafts, setDrafts]         = useState<Record<string, Draft>>({});
+  const [loading, setLoading]       = useState(true);
   const [q, setQ]                   = useState("");
-  const [savingId, setSavingId]     = useState<string | null>(null);
-  const [preview, setPreview]       = useState<PreviewRow[] | null>(null);
+  const [dialog, setDialog]         = useState<DialogType>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | undefined>();
   const [importing, setImporting]   = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const mainWarehouse = warehouses.find((w) => w.type === "PRINCIPAL");
+  const subWarehouses = warehouses.filter((w) => w.type === "SUBBODEGA" && w.active);
+
   const load = async () => {
-    const [productList, categoryList] = await Promise.all([
-      productsApi.getAllAdmin(),
-      categoriesApi.getAll(),
-    ]);
-    setProducts(productList);
-    setCategories(categoryList);
-    setDrafts(
-      Object.fromEntries(productList.map((p) => [p.id, { price: Number(p.price), stock: p.stock }]))
-    );
-  };
-
-  useEffect(() => {
-    load().catch(() => toast.error("No se pudo cargar el inventario"));
-  }, []);
-
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return products;
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(term) ||
-        p.sku.toLowerCase().includes(term) ||
-        p.categoryName?.toLowerCase().includes(term)
-    );
-  }, [products, q]);
-
-  const totals = useMemo(() => {
-    const active = products.filter((p) => p.active);
-    return {
-      active: active.length,
-      units:  active.reduce((s, p) => s + p.stock, 0),
-      value:  active.reduce((s, p) => s + Number(p.price) * p.stock, 0),
-      low:    active.filter((p) => p.stock <= 5).length,
-    };
-  }, [products]);
-
-  const updateDraft = (id: string, patch: Partial<Draft>) =>
-    setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
-
-  const saveProduct = async (product: Product) => {
-    const draft = drafts[product.id];
-    if (!draft) return;
-    setSavingId(product.id);
+    setLoading(true);
     try {
-      const payload: ProductRequest = {
-        sku: product.sku,
-        name: product.name,
-        description: product.description ?? "",
-        price: draft.price,
-        stock: draft.stock,
-        imageUrl: product.imageUrl ?? undefined,
-        categoryId: product.categoryId ?? undefined,
-      };
-      const saved = await productsApi.update(product.id, payload);
-      setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
-      toast.success("Inventario actualizado");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "No se pudo actualizar");
+      const whs = await warehousesApi.getAll();
+      setWarehouses(whs);
+      const main = whs.find((w) => w.type === "PRINCIPAL");
+      if (main) {
+        const [stockData, productData] = await Promise.all([
+          inventoryApi.getStockByWarehouse(main.id),
+          productsApi.getAllAdmin(),
+        ]);
+        setStock(stockData);
+        setProducts(productData);
+      }
+    } catch {
+      toast.error("No se pudo cargar el inventario del almacén principal");
     } finally {
-      setSavingId(null);
+      setLoading(false);
     }
   };
 
-  const exportXLSX = () => {
-    const rows = products.map((p) => ({
-      SKU: p.sku,
-      Nombre: p.name,
-      Descripcion: p.description ?? "",
-      Precio: Number(p.price),
-      Stock: p.stock,
-      Categoria: p.categoryName ?? "",
-      CategoriaId: p.categoryId ?? "",
-      Imagen: p.imageUrl ?? "",
-      Activo: p.active ? "SI" : "NO",
+  useEffect(() => { load(); }, []);
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return stock;
+    return stock.filter(
+      (s) =>
+        s.productName.toLowerCase().includes(term) ||
+        s.productSku.toLowerCase().includes(term)
+    );
+  }, [stock, q]);
+
+  const totals = useMemo(
+    () => ({
+      items:  stock.length,
+      units:  stock.reduce((a, s) => a + s.quantity, 0),
+      value:  stock.reduce((a, s) => a + s.quantity * Number(s.productPrice), 0),
+      low:    stock.filter((s) => s.lowStock && !s.outOfStock).length,
+      outOf:  stock.filter((s) => s.outOfStock).length,
+    }),
+    [stock]
+  );
+
+  const exportCSV = () => {
+    const rows = stock.map((s) => ({
+      SKU: s.productSku,
+      Nombre: s.productName,
+      Cantidad: s.quantity,
+      PrecioUnitario: s.productPrice,
+      ValorTotal: s.quantity * Number(s.productPrice),
+      Bodega: s.warehouseName,
     }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-    XLSX.writeFile(wb, "inventario-productos.xlsx");
+    downloadCSV(`inventario-principal-${new Date().toISOString().split("T")[0]}.csv`, rows);
+  };
+
+  const downloadTemplate = () => {
+    downloadCSV("plantilla-inventario.csv", [
+      { SKU: "PROD-001", Cantidad: 10, Notas: "Entrada inicial" },
+    ]);
   };
 
   const onFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !mainWarehouse) return;
     if (fileInputRef.current) fileInputRef.current.value = "";
-    try {
-      const buffer = await file.arrayBuffer();
-      const wb = XLSX.read(buffer);
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<ImportRow>(sheet, { defval: "" });
-      if (rows.length === 0) {
-        toast.error("El archivo no tiene datos");
-        return;
-      }
-      setPreview(parseExcelRows(rows, products, categories));
-    } catch {
-      toast.error("No se pudo leer el archivo Excel");
-    }
-  };
 
-  const executeImport = async () => {
-    if (!preview) return;
     setImporting(true);
     suppressAuthRedirect(true);
-    let created = 0;
-    let updated = 0;
-    let failed  = 0;
-
+    let ok = 0;
+    let failed = 0;
     let firstError = "";
 
-    for (const row of preview) {
-      if (row.type === "skip") continue;
-      try {
-        if (row.type === "update") {
-          await productsApi.update(row.id, row.payload);
-          updated++;
-        } else {
-          await productsApi.create(row.payload);
-          created++;
-        }
-      } catch (err: any) {
-        failed++;
-        const msg = err?.response?.data?.message ?? err?.response?.data ?? err?.message ?? String(err);
-        console.error(`[Import] fallo fila ${row.sku}:`, err?.response?.status, msg, err?.response?.data);
-        if (!firstError) firstError = `SKU ${row.sku}: ${msg}`;
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      if (rows.length === 0) {
+        toast.error("El archivo CSV está vacío o sin datos");
+        return;
       }
-    }
 
-    suppressAuthRedirect(false);
-    setImporting(false);
-    setPreview(null);
-    await load().catch(() => {});
+      for (const row of rows) {
+        const sku    = (row["SKU"] ?? row["sku"] ?? "").trim();
+        const qtyRaw = row["Cantidad"] ?? row["cantidad"] ?? row["Quantity"] ?? "";
+        const qty    = parseInt(String(qtyRaw), 10);
+        const notes  = (row["Notas"] ?? row["notas"] ?? row["Notes"] ?? "").trim();
 
-    if (failed > 0) {
-      toast.warning(
-        `Importacion con errores: ${created} creados, ${updated} actualizados, ${failed} fallidos` +
-        (firstError ? ` — ${firstError}` : "")
-      );
-    } else {
-      toast.success(`Importacion completa: ${created} creados, ${updated} actualizados`);
+        if (!sku || !Number.isFinite(qty) || qty <= 0) {
+          failed++;
+          if (!firstError) firstError = `Fila inválida — SKU: "${sku}", Cantidad: "${qtyRaw}"`;
+          continue;
+        }
+
+        const product = products.find((p) => p.sku.toLowerCase() === sku.toLowerCase());
+        if (!product) {
+          failed++;
+          if (!firstError) firstError = `SKU no encontrado: "${sku}"`;
+          continue;
+        }
+
+        try {
+          await inventoryApi.recordEntry({
+            warehouseId: mainWarehouse.id,
+            productId: product.id,
+            quantity: qty,
+            notes: notes || undefined,
+          });
+          ok++;
+        } catch (err: any) {
+          failed++;
+          const msg = err?.response?.data?.message ?? String(err);
+          if (!firstError) firstError = `SKU ${sku}: ${msg}`;
+        }
+      }
+
+      if (failed > 0) {
+        toast.warning(
+          `Importación: ${ok} entradas registradas, ${failed} fallidas` +
+            (firstError ? ` — ${firstError}` : "")
+        );
+      } else {
+        toast.success(`Importación completa: ${ok} entradas registradas`);
+      }
+      await load();
+    } catch {
+      toast.error("No se pudo leer el archivo CSV");
+    } finally {
+      suppressAuthRedirect(false);
+      setImporting(false);
     }
   };
+
+  const closeDialog = () => {
+    setDialog(null);
+    setSelectedProductId(undefined);
+  };
+
+  const savedAndReload = () => {
+    closeDialog();
+    load();
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center text-muted-foreground">Cargando inventario...</div>;
+  }
+
+  if (!mainWarehouse) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        No se encontró un almacén de tipo PRINCIPAL. Crea uno en el módulo de Bodegas.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
-      {preview && (
-        <PreviewDialog
-          rows={preview}
-          loading={importing}
-          onConfirm={executeImport}
-          onCancel={() => { if (!importing) setPreview(null); }}
+      {dialog === "entry" && (
+        <EntryDialog
+          warehouseId={mainWarehouse.id}
+          products={products}
+          initial={selectedProductId}
+          onClose={closeDialog}
+          onSaved={savedAndReload}
+        />
+      )}
+      {dialog === "adjust" && (
+        <AdjustDialog
+          warehouseId={mainWarehouse.id}
+          products={products}
+          initial={selectedProductId}
+          onClose={closeDialog}
+          onSaved={savedAndReload}
+        />
+      )}
+      {dialog === "transfer" && (
+        <TransferDialog
+          mainWarehouse={mainWarehouse}
+          subWarehouses={subWarehouses}
+          stock={stock}
+          onClose={closeDialog}
+          onSaved={savedAndReload}
         />
       )}
 
+      {/* Header */}
       <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Inventario</h1>
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <PackageCheck className="w-6 h-6" />
+            Inventario Principal
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Gestion de stock, costos e importacion masiva de productos.
+            {mainWarehouse.name} — Stock actual, entradas y traslados a sub-bodegas.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls"
+            accept=".csv"
             className="hidden"
             onChange={onFileChange}
           />
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-            <FileUp className="w-4 h-4 mr-1" />
-            <span className="hidden xs:inline">Importar</span>
-            <span className="xs:hidden">Imp.</span> Excel
+          <Button variant="outline" size="sm" onClick={downloadTemplate}>
+            <Download className="w-4 h-4 mr-1" /> Plantilla
           </Button>
-          <Button variant="outline" size="sm" onClick={exportXLSX}>
-            <Download className="w-4 h-4 mr-1" />
-            <span className="hidden xs:inline">Exportar</span>
-            <span className="xs:hidden">Exp.</span> Excel
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            <FileUp className="w-4 h-4 mr-1" />
+            {importing ? "Importando..." : "Importar CSV"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="w-4 h-4 mr-1" /> Exportar CSV
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setSelectedProductId(undefined);
+              setDialog("entry");
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1" /> Registrar Entrada
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setDialog("transfer")}>
+            <ArrowLeftRight className="w-4 h-4 mr-1" /> Crear Traslado
           </Button>
         </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
         <Card className="p-3 sm:p-4">
-          <div className="text-xs text-muted-foreground">Activos</div>
-          <div className="text-xl sm:text-2xl font-bold">{totals.active}</div>
+          <div className="text-xs text-muted-foreground">Productos</div>
+          <div className="text-xl sm:text-2xl font-bold">{totals.items}</div>
         </Card>
         <Card className="p-3 sm:p-4">
-          <div className="text-xs text-muted-foreground">Unidades</div>
+          <div className="text-xs text-muted-foreground">Unidades totales</div>
           <div className="text-xl sm:text-2xl font-bold">{totals.units}</div>
         </Card>
-        <Card className="p-3 sm:p-4">
+        <Card className="p-3 sm:p-4 col-span-2 lg:col-span-1">
           <div className="text-xs text-muted-foreground">Valor inventario</div>
-          <div className="text-sm sm:text-xl font-bold truncate">{formatCOP(totals.value)}</div>
+          <div className="text-sm sm:text-lg font-bold truncate">{formatCOP(totals.value)}</div>
         </Card>
         <Card className="p-3 sm:p-4">
-          <div className="text-xs text-muted-foreground">Stock bajo (≤5)</div>
-          <div className="text-xl sm:text-2xl font-bold">{totals.low}</div>
+          <div className="text-xs text-muted-foreground">Stock bajo</div>
+          <div className="text-xl sm:text-2xl font-bold text-yellow-600">{totals.low}</div>
+        </Card>
+        <Card className="p-3 sm:p-4">
+          <div className="text-xs text-muted-foreground">Agotados</div>
+          <div className="text-xl sm:text-2xl font-bold text-red-600">{totals.outOf}</div>
         </Card>
       </div>
 
-      {/* Product table */}
+      {/* Stock table */}
       <Card className="p-3 sm:p-4">
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por SKU, producto o categoria..."
+            placeholder="Buscar por SKU o nombre..."
             className="pl-10"
           />
         </div>
 
         <div className="overflow-x-auto -mx-3 sm:mx-0">
-          <table className="w-full min-w-[600px] text-sm">
+          <table className="w-full min-w-[540px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="py-2 pr-3 pl-3 sm:pl-0 font-medium">Producto</th>
-                <th className="py-2 px-3 font-medium hidden md:table-cell">Categoria</th>
-                <th className="py-2 px-3 font-medium w-28">Precio</th>
-                <th className="py-2 px-3 font-medium w-24">Stock</th>
+                <th className="py-2 pl-3 sm:pl-0 pr-3 font-medium">Producto</th>
+                <th className="py-2 px-3 font-medium text-right">Stock</th>
+                <th className="py-2 px-3 font-medium text-right hidden sm:table-cell">Precio</th>
                 <th className="py-2 px-3 font-medium hidden sm:table-cell">Estado</th>
-                <th className="py-2 px-3 font-medium text-right">Accion</th>
+                <th className="py-2 px-3 font-medium text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => {
-                const draft = drafts[p.id] ?? { price: Number(p.price), stock: p.stock };
-                return (
-                  <tr key={p.id} className="border-b last:border-0">
-                    <td className="py-3 pr-3 pl-3 sm:pl-0">
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-muted overflow-hidden shrink-0">
-                          <ProductImg src={p.imageUrl} alt={p.name} iconSize="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-medium truncate max-w-[140px] sm:max-w-[200px]">{p.name}</div>
-                          <div className="text-xs text-muted-foreground">SKU {p.sku}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{p.categoryName ?? "Sin categoria"}</td>
-                    <td className="py-3 px-3">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={draft.price}
-                        className="w-24"
-                        onChange={(e) => updateDraft(p.id, { price: Number(e.target.value) })}
-                      />
-                    </td>
-                    <td className="py-3 px-3">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={draft.stock}
-                        className="w-20"
-                        onChange={(e) => updateDraft(p.id, { stock: Number(e.target.value) })}
-                      />
-                    </td>
-                    <td className="py-3 px-3 hidden sm:table-cell">
-                      {draft.stock <= 0 ? (
-                        <Badge variant="destructive">Agotado</Badge>
-                      ) : draft.stock <= 5 ? (
-                        <Badge variant="secondary">Bajo</Badge>
-                      ) : (
-                        <Badge variant="outline">OK</Badge>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-right">
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                    {stock.length === 0
+                      ? "Sin stock registrado en el almacén principal. Registra una entrada para comenzar."
+                      : "Sin resultados para la búsqueda."}
+                  </td>
+                </tr>
+              )}
+              {filtered.map((s) => (
+                <tr key={s.id} className="border-b last:border-0">
+                  <td className="py-3 pl-3 sm:pl-0 pr-3">
+                    <div className="font-medium truncate max-w-[180px] sm:max-w-none">
+                      {s.productName}
+                    </div>
+                    <div className="text-xs text-muted-foreground">SKU {s.productSku}</div>
+                  </td>
+                  <td className="py-3 px-3 text-right font-semibold">{s.quantity}</td>
+                  <td className="py-3 px-3 text-right text-muted-foreground hidden sm:table-cell">
+                    {formatCOP(Number(s.productPrice))}
+                  </td>
+                  <td className="py-3 px-3 hidden sm:table-cell">
+                    {s.outOfStock ? (
+                      <Badge variant="destructive">Agotado</Badge>
+                    ) : s.lowStock ? (
+                      <Badge variant="secondary">Stock bajo</Badge>
+                    ) : (
+                      <Badge variant="outline">OK</Badge>
+                    )}
+                  </td>
+                  <td className="py-3 px-3 text-right">
+                    <div className="flex gap-1 justify-end">
                       <Button
                         size="sm"
-                        onClick={() => saveProduct(p)}
-                        disabled={savingId === p.id}
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedProductId(s.productId);
+                          setDialog("entry");
+                        }}
                       >
-                        <Save className="w-4 h-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Guardar</span>
+                        <Plus className="w-3.5 h-3.5 sm:mr-1" />
+                        <span className="hidden sm:inline">Entrada</span>
                       </Button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedProductId(s.productId);
+                          setDialog("adjust");
+                        }}
+                      >
+                        <span className="text-xs">Ajustar</span>
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

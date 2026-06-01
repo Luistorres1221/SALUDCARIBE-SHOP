@@ -6,6 +6,7 @@ import {
   type OrderStatus,
   type DeliverItemRequest,
 } from "@/api/orders";
+import { warehousesApi, type Warehouse } from "@/api/warehouses";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ const DELIVERABLE: OrderStatus[] = ["pendiente", "aprobado", "pagado", "parcial"
 
 function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("todos");
   const [search, setSearch] = useState("");
@@ -84,6 +86,7 @@ function AdminOrders() {
   // Delivery state
   const [deliverAmounts, setDeliverAmounts] = useState<Record<string, number>>({});
   const [deliverNotes, setDeliverNotes] = useState("");
+  const [deliverWarehouseId, setDeliverWarehouseId] = useState("");
   const [delivering, setDelivering] = useState(false);
 
   // Admin notes state
@@ -104,6 +107,7 @@ function AdminOrders() {
 
   useEffect(() => {
     load();
+    warehousesApi.getAll().then(setWarehouses).catch(() => {});
   }, []);
 
   const openDetail = (o: Order) => {
@@ -114,6 +118,7 @@ function AdminOrders() {
     });
     setDeliverAmounts(amounts);
     setDeliverNotes("");
+    setDeliverWarehouseId("");
     setAdminNotesInput(o.adminNotes ?? "");
   };
 
@@ -139,12 +144,17 @@ function AdminOrders() {
       toast.error("Ingresa al menos una cantidad a entregar");
       return;
     }
+    if (!deliverWarehouseId) {
+      toast.error("Selecciona la bodega de la que se descontará el stock");
+      return;
+    }
 
     setDelivering(true);
     try {
       const updated = await ordersApi.deliver(detail.id, {
         items,
         notes: deliverNotes || undefined,
+        warehouseId: deliverWarehouseId,
       });
       setOrders((prev) => prev.map((o) => (o.id === detail.id ? updated : o)));
       setDetail(updated);
@@ -470,6 +480,26 @@ function AdminOrders() {
                     </table>
                   </div>
                   <div className="mt-2 space-y-2">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">
+                        Bodega de origen del stock <span className="text-destructive">*</span>
+                      </label>
+                      <Select value={deliverWarehouseId} onValueChange={setDeliverWarehouseId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona la bodega..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {warehouses.filter((w) => w.active).map((w) => (
+                            <SelectItem key={w.id} value={w.id}>
+                              {w.name}
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                ({w.type === "PRINCIPAL" ? "Principal" : "Sub-bodega"})
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <Textarea
                       placeholder="Observaciones de esta entrega (opcional)..."
                       value={deliverNotes}
@@ -478,7 +508,7 @@ function AdminOrders() {
                     />
                     <Button
                       onClick={handleDeliver}
-                      disabled={delivering}
+                      disabled={delivering || !deliverWarehouseId}
                       className="w-full"
                     >
                       <Truck className="w-4 h-4 mr-2" />

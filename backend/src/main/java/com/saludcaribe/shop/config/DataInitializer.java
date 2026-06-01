@@ -23,6 +23,8 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final WarehouseRepository warehouseRepository;
+    private final WarehouseStockRepository warehouseStockRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
@@ -31,6 +33,7 @@ public class DataInitializer implements CommandLineRunner {
         dropLegacyStatusConstraint();
         seedAdmin();
         seedCategoriesAndProducts();
+        seedWarehouses();
     }
 
     private void dropLegacyStatusConstraint() {
@@ -125,6 +128,57 @@ public class DataInitializer implements CommandLineRunner {
         prod("PAP-003", "Tóner HP LaserJet Negro",          "Tóner compatible HP 85A, rendimiento 1600 páginas.",           185_000,  8, papeleria, "https://picsum.photos/seed/toner-hp/400/400");
 
         log.info("Datos iniciales cargados: 5 categorías, 20 productos.");
+    }
+
+    private void seedWarehouses() {
+        if (!warehouseRepository.findAll().isEmpty()) return;
+
+        Warehouse principal = warehouseRepository.save(Warehouse.builder()
+                .code("ALM-CTG")
+                .name("Almacén Principal")
+                .location("Cartagena")
+                .description("Almacén central que abastece las subbodegas de la IPS")
+                .type(WarehouseType.PRINCIPAL)
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        Warehouse subCtg = warehouseRepository.save(Warehouse.builder()
+                .code("BOD-CTG")
+                .name("Subbodega Cartagena")
+                .location("Cartagena")
+                .description("Bodega operativa sede Cartagena")
+                .type(WarehouseType.SUBBODEGA)
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        Warehouse subArm = warehouseRepository.save(Warehouse.builder()
+                .code("BOD-ARM")
+                .name("Subbodega Armenia")
+                .location("Armenia")
+                .description("Bodega operativa sede Armenia")
+                .type(WarehouseType.SUBBODEGA)
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        // Seed initial stock in the principal warehouse for existing products
+        List<Product> products = productRepository.findAll();
+        for (Product p : products) {
+            if (p.getStock() != null && p.getStock() > 0) {
+                warehouseStockRepository.save(WarehouseStock.builder()
+                        .warehouseId(principal.getId())
+                        .productId(p.getId())
+                        .quantity(p.getStock())
+                        .minimumStock(5)
+                        .updatedAt(LocalDateTime.now())
+                        .build());
+            }
+        }
+
+        log.info("Bodegas creadas: Almacén Principal (Cartagena), Subbodega Cartagena, Subbodega Armenia.");
+        log.info("Stock inicial cargado en Almacén Principal para {} productos.", products.size());
     }
 
     private Category cat(String name, String slug, String description, String icon) {

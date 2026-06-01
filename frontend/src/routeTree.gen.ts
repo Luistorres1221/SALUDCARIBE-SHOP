@@ -15,18 +15,24 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
+import { Route as PedidosInternosIndexRouteImport } from './routes/pedidos-internos.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PedidosOrderIdRouteImport } from './routes/pedidos.$orderId'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminTrasladosRouteImport } from './routes/admin.traslados'
+import { Route as AdminStockBodegasRouteImport } from './routes/admin.stock-bodegas'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminReportesRouteImport } from './routes/admin.reportes'
 import { Route as AdminProductosRouteImport } from './routes/admin.productos'
+import { Route as AdminPedidosInternosRouteImport } from './routes/admin.pedidos-internos'
 import { Route as AdminPedidosRouteImport } from './routes/admin.pedidos'
 import { Route as AdminLotesRouteImport } from './routes/admin.lotes'
+import { Route as AdminKardexRouteImport } from './routes/admin.kardex'
 import { Route as AdminInventarioRouteImport } from './routes/admin.inventario'
 import { Route as AdminDependenciasRouteImport } from './routes/admin.dependencias'
 import { Route as AdminCentrosCostoRouteImport } from './routes/admin.centros-costo'
 import { Route as AdminCategoriasRouteImport } from './routes/admin.categorias'
+import { Route as AdminBodegasRouteImport } from './routes/admin.bodegas'
 
 const ProductosRoute = ProductosRouteImport.update({
   id: '/productos',
@@ -58,6 +64,11 @@ const PedidosIndexRoute = PedidosIndexRouteImport.update({
   path: '/pedidos/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PedidosInternosIndexRoute = PedidosInternosIndexRouteImport.update({
+  id: '/pedidos-internos/',
+  path: '/pedidos-internos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -71,6 +82,16 @@ const PedidosOrderIdRoute = PedidosOrderIdRouteImport.update({
 const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTrasladosRoute = AdminTrasladosRouteImport.update({
+  id: '/traslados',
+  path: '/traslados',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStockBodegasRoute = AdminStockBodegasRouteImport.update({
+  id: '/stock-bodegas',
+  path: '/stock-bodegas',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRolesRoute = AdminRolesRouteImport.update({
@@ -88,6 +109,11 @@ const AdminProductosRoute = AdminProductosRouteImport.update({
   path: '/productos',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPedidosInternosRoute = AdminPedidosInternosRouteImport.update({
+  id: '/pedidos-internos',
+  path: '/pedidos-internos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPedidosRoute = AdminPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -96,6 +122,11 @@ const AdminPedidosRoute = AdminPedidosRouteImport.update({
 const AdminLotesRoute = AdminLotesRouteImport.update({
   id: '/lotes',
   path: '/lotes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminKardexRoute = AdminKardexRouteImport.update({
+  id: '/kardex',
+  path: '/kardex',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInventarioRoute = AdminInventarioRouteImport.update({
@@ -118,6 +149,11 @@ const AdminCategoriasRoute = AdminCategoriasRouteImport.update({
   path: '/categorias',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBodegasRoute = AdminBodegasRouteImport.update({
+  id: '/bodegas',
+  path: '/bodegas',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -125,18 +161,24 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/carrito': typeof CarritoRoute
   '/productos': typeof ProductosRoute
+  '/admin/bodegas': typeof AdminBodegasRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/centros-costo': typeof AdminCentrosCostoRoute
   '/admin/dependencias': typeof AdminDependenciasRoute
   '/admin/inventario': typeof AdminInventarioRoute
+  '/admin/kardex': typeof AdminKardexRoute
   '/admin/lotes': typeof AdminLotesRoute
   '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/pedidos-internos': typeof AdminPedidosInternosRoute
   '/admin/productos': typeof AdminProductosRoute
   '/admin/reportes': typeof AdminReportesRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/stock-bodegas': typeof AdminStockBodegasRoute
+  '/admin/traslados': typeof AdminTrasladosRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/pedidos/$orderId': typeof PedidosOrderIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/pedidos-internos/': typeof PedidosInternosIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -144,18 +186,24 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/carrito': typeof CarritoRoute
   '/productos': typeof ProductosRoute
+  '/admin/bodegas': typeof AdminBodegasRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/centros-costo': typeof AdminCentrosCostoRoute
   '/admin/dependencias': typeof AdminDependenciasRoute
   '/admin/inventario': typeof AdminInventarioRoute
+  '/admin/kardex': typeof AdminKardexRoute
   '/admin/lotes': typeof AdminLotesRoute
   '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/pedidos-internos': typeof AdminPedidosInternosRoute
   '/admin/productos': typeof AdminProductosRoute
   '/admin/reportes': typeof AdminReportesRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/stock-bodegas': typeof AdminStockBodegasRoute
+  '/admin/traslados': typeof AdminTrasladosRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/pedidos/$orderId': typeof PedidosOrderIdRoute
   '/admin': typeof AdminIndexRoute
+  '/pedidos-internos': typeof PedidosInternosIndexRoute
   '/pedidos': typeof PedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -165,18 +213,24 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/carrito': typeof CarritoRoute
   '/productos': typeof ProductosRoute
+  '/admin/bodegas': typeof AdminBodegasRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/centros-costo': typeof AdminCentrosCostoRoute
   '/admin/dependencias': typeof AdminDependenciasRoute
   '/admin/inventario': typeof AdminInventarioRoute
+  '/admin/kardex': typeof AdminKardexRoute
   '/admin/lotes': typeof AdminLotesRoute
   '/admin/pedidos': typeof AdminPedidosRoute
+  '/admin/pedidos-internos': typeof AdminPedidosInternosRoute
   '/admin/productos': typeof AdminProductosRoute
   '/admin/reportes': typeof AdminReportesRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/stock-bodegas': typeof AdminStockBodegasRoute
+  '/admin/traslados': typeof AdminTrasladosRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/pedidos/$orderId': typeof PedidosOrderIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/pedidos-internos/': typeof PedidosInternosIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -187,18 +241,24 @@ export interface FileRouteTypes {
     | '/auth'
     | '/carrito'
     | '/productos'
+    | '/admin/bodegas'
     | '/admin/categorias'
     | '/admin/centros-costo'
     | '/admin/dependencias'
     | '/admin/inventario'
+    | '/admin/kardex'
     | '/admin/lotes'
     | '/admin/pedidos'
+    | '/admin/pedidos-internos'
     | '/admin/productos'
     | '/admin/reportes'
     | '/admin/roles'
+    | '/admin/stock-bodegas'
+    | '/admin/traslados'
     | '/admin/usuarios'
     | '/pedidos/$orderId'
     | '/admin/'
+    | '/pedidos-internos/'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -206,18 +266,24 @@ export interface FileRouteTypes {
     | '/auth'
     | '/carrito'
     | '/productos'
+    | '/admin/bodegas'
     | '/admin/categorias'
     | '/admin/centros-costo'
     | '/admin/dependencias'
     | '/admin/inventario'
+    | '/admin/kardex'
     | '/admin/lotes'
     | '/admin/pedidos'
+    | '/admin/pedidos-internos'
     | '/admin/productos'
     | '/admin/reportes'
     | '/admin/roles'
+    | '/admin/stock-bodegas'
+    | '/admin/traslados'
     | '/admin/usuarios'
     | '/pedidos/$orderId'
     | '/admin'
+    | '/pedidos-internos'
     | '/pedidos'
   id:
     | '__root__'
@@ -226,18 +292,24 @@ export interface FileRouteTypes {
     | '/auth'
     | '/carrito'
     | '/productos'
+    | '/admin/bodegas'
     | '/admin/categorias'
     | '/admin/centros-costo'
     | '/admin/dependencias'
     | '/admin/inventario'
+    | '/admin/kardex'
     | '/admin/lotes'
     | '/admin/pedidos'
+    | '/admin/pedidos-internos'
     | '/admin/productos'
     | '/admin/reportes'
     | '/admin/roles'
+    | '/admin/stock-bodegas'
+    | '/admin/traslados'
     | '/admin/usuarios'
     | '/pedidos/$orderId'
     | '/admin/'
+    | '/pedidos-internos/'
     | '/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -248,6 +320,7 @@ export interface RootRouteChildren {
   CarritoRoute: typeof CarritoRoute
   ProductosRoute: typeof ProductosRoute
   PedidosOrderIdRoute: typeof PedidosOrderIdRoute
+  PedidosInternosIndexRoute: typeof PedidosInternosIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
 }
 
@@ -295,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PedidosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pedidos-internos/': {
+      id: '/pedidos-internos/'
+      path: '/pedidos-internos'
+      fullPath: '/pedidos-internos/'
+      preLoaderRoute: typeof PedidosInternosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -314,6 +394,20 @@ declare module '@tanstack/react-router' {
       path: '/usuarios'
       fullPath: '/admin/usuarios'
       preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/traslados': {
+      id: '/admin/traslados'
+      path: '/traslados'
+      fullPath: '/admin/traslados'
+      preLoaderRoute: typeof AdminTrasladosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/stock-bodegas': {
+      id: '/admin/stock-bodegas'
+      path: '/stock-bodegas'
+      fullPath: '/admin/stock-bodegas'
+      preLoaderRoute: typeof AdminStockBodegasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/roles': {
@@ -337,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pedidos-internos': {
+      id: '/admin/pedidos-internos'
+      path: '/pedidos-internos'
+      fullPath: '/admin/pedidos-internos'
+      preLoaderRoute: typeof AdminPedidosInternosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/pedidos': {
       id: '/admin/pedidos'
       path: '/pedidos'
@@ -349,6 +450,13 @@ declare module '@tanstack/react-router' {
       path: '/lotes'
       fullPath: '/admin/lotes'
       preLoaderRoute: typeof AdminLotesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/kardex': {
+      id: '/admin/kardex'
+      path: '/kardex'
+      fullPath: '/admin/kardex'
+      preLoaderRoute: typeof AdminKardexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/inventario': {
@@ -379,33 +487,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriasRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/bodegas': {
+      id: '/admin/bodegas'
+      path: '/bodegas'
+      fullPath: '/admin/bodegas'
+      preLoaderRoute: typeof AdminBodegasRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminBodegasRoute: typeof AdminBodegasRoute
   AdminCategoriasRoute: typeof AdminCategoriasRoute
   AdminCentrosCostoRoute: typeof AdminCentrosCostoRoute
   AdminDependenciasRoute: typeof AdminDependenciasRoute
   AdminInventarioRoute: typeof AdminInventarioRoute
+  AdminKardexRoute: typeof AdminKardexRoute
   AdminLotesRoute: typeof AdminLotesRoute
   AdminPedidosRoute: typeof AdminPedidosRoute
+  AdminPedidosInternosRoute: typeof AdminPedidosInternosRoute
   AdminProductosRoute: typeof AdminProductosRoute
   AdminReportesRoute: typeof AdminReportesRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminStockBodegasRoute: typeof AdminStockBodegasRoute
+  AdminTrasladosRoute: typeof AdminTrasladosRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminBodegasRoute: AdminBodegasRoute,
   AdminCategoriasRoute: AdminCategoriasRoute,
   AdminCentrosCostoRoute: AdminCentrosCostoRoute,
   AdminDependenciasRoute: AdminDependenciasRoute,
   AdminInventarioRoute: AdminInventarioRoute,
+  AdminKardexRoute: AdminKardexRoute,
   AdminLotesRoute: AdminLotesRoute,
   AdminPedidosRoute: AdminPedidosRoute,
+  AdminPedidosInternosRoute: AdminPedidosInternosRoute,
   AdminProductosRoute: AdminProductosRoute,
   AdminReportesRoute: AdminReportesRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminStockBodegasRoute: AdminStockBodegasRoute,
+  AdminTrasladosRoute: AdminTrasladosRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -419,6 +544,7 @@ const rootRouteChildren: RootRouteChildren = {
   CarritoRoute: CarritoRoute,
   ProductosRoute: ProductosRoute,
   PedidosOrderIdRoute: PedidosOrderIdRoute,
+  PedidosInternosIndexRoute: PedidosInternosIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,
 }
 export const routeTree = rootRouteImport

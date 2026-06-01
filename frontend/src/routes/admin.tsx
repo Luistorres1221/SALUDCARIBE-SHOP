@@ -1,7 +1,10 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { BarChart3, Boxes, Building2, FlaskConical, LayoutDashboard, Layers, Package, Tag, ShoppingCart, Users, Shield } from "lucide-react";
+import {
+  ArrowLeftRight, BarChart3, BookOpen, Boxes, Building2, ClipboardList,
+  FlaskConical, LayoutDashboard, Layers, Package, PackageCheck, Tag, ShoppingCart, Users, Shield, Warehouse,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
@@ -9,17 +12,25 @@ export const Route = createFileRoute("/admin")({
 });
 
 const NAV = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/inventario", label: "Inventario", icon: Boxes },
-  { to: "/admin/productos", label: "Productos", icon: Package },
-  { to: "/admin/categorias", label: "Categorías", icon: Tag },
-  { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
-  { to: "/admin/centros-costo", label: "Centros de Costo", icon: Building2 },
-  { to: "/admin/dependencias", label: "Dependencias", icon: Layers },
-  { to: "/admin/usuarios", label: "Usuarios", icon: Users },
-  { to: "/admin/roles", label: "Roles", icon: Shield },
-  { to: "/admin/lotes", label: "Lotes/Venc.", icon: FlaskConical },
-  { to: "/admin/reportes", label: "Reportes", icon: BarChart3 },
+  { to: "/admin",                  label: "Dashboard",         icon: LayoutDashboard, exact: true },
+  // ── Módulo Multi-Bodega ────────────────────────────────────────────
+  { to: "/admin/bodegas",          label: "Bodegas",           icon: Warehouse },
+  { to: "/admin/stock-bodegas",    label: "Stock Bodegas",     icon: Boxes },
+  { to: "/admin/traslados",        label: "Traslados",         icon: ArrowLeftRight },
+  { to: "/admin/pedidos-internos", label: "Pedidos Internos",  icon: ClipboardList },
+  { to: "/admin/kardex",           label: "Kardex",            icon: BookOpen },
+  { to: "/admin/inventario",       label: "Inv. Principal",    icon: PackageCheck },
+  // ── Catálogo y Pedidos ─────────────────────────────────────────────
+  { to: "/admin/productos",        label: "Productos",         icon: Package },
+  { to: "/admin/categorias",       label: "Categorías",        icon: Tag },
+  { to: "/admin/pedidos",          label: "Pedidos",           icon: ShoppingCart },
+  { to: "/admin/lotes",            label: "Lotes/Venc.",       icon: FlaskConical },
+  // ── Organización ──────────────────────────────────────────────────
+  { to: "/admin/centros-costo",    label: "Centros de Costo",  icon: Building2 },
+  { to: "/admin/dependencias",     label: "Dependencias",      icon: Layers },
+  { to: "/admin/usuarios",         label: "Usuarios",          icon: Users },
+  { to: "/admin/roles",            label: "Roles",             icon: Shield },
+  { to: "/admin/reportes",         label: "Reportes",          icon: BarChart3 },
 ];
 
 function AdminLayout() {

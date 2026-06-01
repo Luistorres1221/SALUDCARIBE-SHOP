@@ -45,6 +45,22 @@ public class AuthService {
         return buildResponse(user);
     }
 
+    public AuthResponse refresh(RefreshRequest req) {
+        try {
+            String email = jwtService.extractUsername(req.getRefreshToken());
+            var ud = userDetailsService.loadUserByUsername(email);
+            if (!jwtService.isTokenValid(req.getRefreshToken(), ud)) {
+                throw new IllegalArgumentException("Refresh token inválido");
+            }
+            User user = userRepository.findByEmail(email).orElseThrow();
+            return buildResponse(user);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Sesión expirada, inicia sesión nuevamente");
+        }
+    }
+
     private AuthResponse buildResponse(User user) {
         var ud = userDetailsService.loadUserByUsername(user.getEmail());
         return AuthResponse.builder()

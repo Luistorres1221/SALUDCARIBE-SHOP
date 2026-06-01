@@ -62,6 +62,7 @@ export interface DeliverItemRequest {
 export interface DeliverOrderRequest {
   items: DeliverItemRequest[];
   notes?: string;
+  warehouseId?: string;
 }
 
 export const ordersApi = {
