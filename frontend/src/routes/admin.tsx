@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tan
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import {
-  ArrowLeftRight, BarChart3, BookOpen, Boxes, Building2, ClipboardList,
+  ArrowLeftRight, BarChart3, BookOpen, Boxes, Building2,
   FlaskConical, LayoutDashboard, Layers, Package, PackageCheck, Tag, ShoppingCart, Users, Shield, Warehouse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,6 @@ const NAV = [
   { to: "/admin/bodegas",          label: "Bodegas",           icon: Warehouse },
   { to: "/admin/stock-bodegas",    label: "Stock Bodegas",     icon: Boxes },
   { to: "/admin/traslados",        label: "Traslados",         icon: ArrowLeftRight },
-  { to: "/admin/pedidos-internos", label: "Pedidos Internos",  icon: ClipboardList },
   { to: "/admin/kardex",           label: "Kardex",            icon: BookOpen },
   { to: "/admin/inventario",       label: "Inv. Principal",    icon: PackageCheck },
   // ── Catálogo y Pedidos ─────────────────────────────────────────────

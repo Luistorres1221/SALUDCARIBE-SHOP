@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
-import { Route as PedidosInternosIndexRouteImport } from './routes/pedidos-internos.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PedidosOrderIdRouteImport } from './routes/pedidos.$orderId'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
@@ -24,7 +23,6 @@ import { Route as AdminStockBodegasRouteImport } from './routes/admin.stock-bode
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminReportesRouteImport } from './routes/admin.reportes'
 import { Route as AdminProductosRouteImport } from './routes/admin.productos'
-import { Route as AdminPedidosInternosRouteImport } from './routes/admin.pedidos-internos'
 import { Route as AdminPedidosRouteImport } from './routes/admin.pedidos'
 import { Route as AdminLotesRouteImport } from './routes/admin.lotes'
 import { Route as AdminKardexRouteImport } from './routes/admin.kardex'
@@ -62,11 +60,6 @@ const IndexRoute = IndexRouteImport.update({
 const PedidosIndexRoute = PedidosIndexRouteImport.update({
   id: '/pedidos/',
   path: '/pedidos/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosInternosIndexRoute = PedidosInternosIndexRouteImport.update({
-  id: '/pedidos-internos/',
-  path: '/pedidos-internos/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -107,11 +100,6 @@ const AdminReportesRoute = AdminReportesRouteImport.update({
 const AdminProductosRoute = AdminProductosRouteImport.update({
   id: '/productos',
   path: '/productos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPedidosInternosRoute = AdminPedidosInternosRouteImport.update({
-  id: '/pedidos-internos',
-  path: '/pedidos-internos',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPedidosRoute = AdminPedidosRouteImport.update({
@@ -169,7 +157,6 @@ export interface FileRoutesByFullPath {
   '/admin/kardex': typeof AdminKardexRoute
   '/admin/lotes': typeof AdminLotesRoute
   '/admin/pedidos': typeof AdminPedidosRoute
-  '/admin/pedidos-internos': typeof AdminPedidosInternosRoute
   '/admin/productos': typeof AdminProductosRoute
   '/admin/reportes': typeof AdminReportesRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -178,7 +165,6 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/pedidos/$orderId': typeof PedidosOrderIdRoute
   '/admin/': typeof AdminIndexRoute
-  '/pedidos-internos/': typeof PedidosInternosIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -194,7 +180,6 @@ export interface FileRoutesByTo {
   '/admin/kardex': typeof AdminKardexRoute
   '/admin/lotes': typeof AdminLotesRoute
   '/admin/pedidos': typeof AdminPedidosRoute
-  '/admin/pedidos-internos': typeof AdminPedidosInternosRoute
   '/admin/productos': typeof AdminProductosRoute
   '/admin/reportes': typeof AdminReportesRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -203,7 +188,6 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/pedidos/$orderId': typeof PedidosOrderIdRoute
   '/admin': typeof AdminIndexRoute
-  '/pedidos-internos': typeof PedidosInternosIndexRoute
   '/pedidos': typeof PedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -221,7 +205,6 @@ export interface FileRoutesById {
   '/admin/kardex': typeof AdminKardexRoute
   '/admin/lotes': typeof AdminLotesRoute
   '/admin/pedidos': typeof AdminPedidosRoute
-  '/admin/pedidos-internos': typeof AdminPedidosInternosRoute
   '/admin/productos': typeof AdminProductosRoute
   '/admin/reportes': typeof AdminReportesRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -230,7 +213,6 @@ export interface FileRoutesById {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/pedidos/$orderId': typeof PedidosOrderIdRoute
   '/admin/': typeof AdminIndexRoute
-  '/pedidos-internos/': typeof PedidosInternosIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -249,7 +231,6 @@ export interface FileRouteTypes {
     | '/admin/kardex'
     | '/admin/lotes'
     | '/admin/pedidos'
-    | '/admin/pedidos-internos'
     | '/admin/productos'
     | '/admin/reportes'
     | '/admin/roles'
@@ -258,7 +239,6 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/pedidos/$orderId'
     | '/admin/'
-    | '/pedidos-internos/'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -274,7 +254,6 @@ export interface FileRouteTypes {
     | '/admin/kardex'
     | '/admin/lotes'
     | '/admin/pedidos'
-    | '/admin/pedidos-internos'
     | '/admin/productos'
     | '/admin/reportes'
     | '/admin/roles'
@@ -283,7 +262,6 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/pedidos/$orderId'
     | '/admin'
-    | '/pedidos-internos'
     | '/pedidos'
   id:
     | '__root__'
@@ -300,7 +278,6 @@ export interface FileRouteTypes {
     | '/admin/kardex'
     | '/admin/lotes'
     | '/admin/pedidos'
-    | '/admin/pedidos-internos'
     | '/admin/productos'
     | '/admin/reportes'
     | '/admin/roles'
@@ -309,7 +286,6 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/pedidos/$orderId'
     | '/admin/'
-    | '/pedidos-internos/'
     | '/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -320,7 +296,6 @@ export interface RootRouteChildren {
   CarritoRoute: typeof CarritoRoute
   ProductosRoute: typeof ProductosRoute
   PedidosOrderIdRoute: typeof PedidosOrderIdRoute
-  PedidosInternosIndexRoute: typeof PedidosInternosIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
 }
 
@@ -366,13 +341,6 @@ declare module '@tanstack/react-router' {
       path: '/pedidos'
       fullPath: '/pedidos/'
       preLoaderRoute: typeof PedidosIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pedidos-internos/': {
-      id: '/pedidos-internos/'
-      path: '/pedidos-internos'
-      fullPath: '/pedidos-internos/'
-      preLoaderRoute: typeof PedidosInternosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -429,13 +397,6 @@ declare module '@tanstack/react-router' {
       path: '/productos'
       fullPath: '/admin/productos'
       preLoaderRoute: typeof AdminProductosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pedidos-internos': {
-      id: '/admin/pedidos-internos'
-      path: '/pedidos-internos'
-      fullPath: '/admin/pedidos-internos'
-      preLoaderRoute: typeof AdminPedidosInternosRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/pedidos': {
@@ -506,7 +467,6 @@ interface AdminRouteChildren {
   AdminKardexRoute: typeof AdminKardexRoute
   AdminLotesRoute: typeof AdminLotesRoute
   AdminPedidosRoute: typeof AdminPedidosRoute
-  AdminPedidosInternosRoute: typeof AdminPedidosInternosRoute
   AdminProductosRoute: typeof AdminProductosRoute
   AdminReportesRoute: typeof AdminReportesRoute
   AdminRolesRoute: typeof AdminRolesRoute
@@ -525,7 +485,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminKardexRoute: AdminKardexRoute,
   AdminLotesRoute: AdminLotesRoute,
   AdminPedidosRoute: AdminPedidosRoute,
-  AdminPedidosInternosRoute: AdminPedidosInternosRoute,
   AdminProductosRoute: AdminProductosRoute,
   AdminReportesRoute: AdminReportesRoute,
   AdminRolesRoute: AdminRolesRoute,
@@ -544,7 +503,6 @@ const rootRouteChildren: RootRouteChildren = {
   CarritoRoute: CarritoRoute,
   ProductosRoute: ProductosRoute,
   PedidosOrderIdRoute: PedidosOrderIdRoute,
-  PedidosInternosIndexRoute: PedidosInternosIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,
 }
 export const routeTree = rootRouteImport
