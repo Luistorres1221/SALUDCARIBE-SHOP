@@ -25,6 +25,8 @@ public class User {
 
     private String fullName;
     private String area;
+    private UUID cargoId;
+    private String cargoName;
     private LocalDateTime createdAt;
 
     @ElementCollection(fetch = FetchType.EAGER)

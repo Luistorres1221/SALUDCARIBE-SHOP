@@ -23,13 +23,13 @@ public class WarehouseController {
     }
 
     @GetMapping("/admin/warehouses")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<WarehouseResponse>> getAll() {
         return ResponseEntity.ok(warehouseService.findAll());
     }
 
     @GetMapping("/admin/warehouses/{id}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<WarehouseResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(warehouseService.findById(id));
     }

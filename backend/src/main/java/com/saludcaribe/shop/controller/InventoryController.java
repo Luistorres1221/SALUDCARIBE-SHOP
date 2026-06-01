@@ -15,7 +15,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/inventory")
-@PreAuthorize("hasRole('admin')")
 @RequiredArgsConstructor
 public class InventoryController {
 
@@ -23,26 +22,31 @@ public class InventoryController {
     private final UserRepository userRepository;
 
     @GetMapping("/stock")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<WarehouseStockResponse>> getAllStock() {
         return ResponseEntity.ok(inventoryService.getAllStock());
     }
 
     @GetMapping("/stock/warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<WarehouseStockResponse>> getStockByWarehouse(@PathVariable UUID warehouseId) {
         return ResponseEntity.ok(inventoryService.getStockByWarehouse(warehouseId));
     }
 
     @GetMapping("/stock/low/{warehouseId}")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<WarehouseStockResponse>> getLowStock(@PathVariable UUID warehouseId) {
         return ResponseEntity.ok(inventoryService.getLowStock(warehouseId));
     }
 
     @GetMapping("/stock/out-of-stock/{warehouseId}")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<WarehouseStockResponse>> getOutOfStock(@PathVariable UUID warehouseId) {
         return ResponseEntity.ok(inventoryService.getOutOfStock(warehouseId));
     }
 
     @PostMapping("/entry")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<InventoryMovementResponse> recordEntry(
             @RequestBody StockEntryRequest req,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -52,6 +56,7 @@ public class InventoryController {
     }
 
     @PostMapping("/adjust")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<InventoryMovementResponse> adjustStock(
             @RequestBody AdjustStockRequest req,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -61,6 +66,7 @@ public class InventoryController {
     }
 
     @GetMapping("/kardex/{productId}")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<InventoryMovementResponse>> getKardex(
             @PathVariable UUID productId,
             @RequestParam(required = false) UUID warehouseId) {
@@ -68,11 +74,13 @@ public class InventoryController {
     }
 
     @GetMapping("/movements")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<InventoryMovementResponse>> getAllMovements() {
         return ResponseEntity.ok(inventoryService.getAllMovements());
     }
 
     @GetMapping("/movements/warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<InventoryMovementResponse>> getMovementsByWarehouse(@PathVariable UUID warehouseId) {
         return ResponseEntity.ok(inventoryService.getMovementsByWarehouse(warehouseId));
     }

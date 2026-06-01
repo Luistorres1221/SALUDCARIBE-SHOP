@@ -47,6 +47,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/uploads").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/cost-centers").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/dependencies").authenticated()
+                        // Almacenista: lectura de inventario, stock, kardex y cargos
+                        .requestMatchers(HttpMethod.GET, "/api/admin/inventory/**").hasAnyRole("admin", "almacenista")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/warehouses/**").hasAnyRole("admin", "almacenista")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/transfers/**").hasAnyRole("admin", "almacenista")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/cargos/**").hasAnyRole("admin", "almacenista")
+                        // Almacenista: lectura y entrega de pedidos
+                        .requestMatchers(HttpMethod.GET, "/api/orders").hasAnyRole("admin", "almacenista")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("admin", "almacenista")
+                        .requestMatchers(HttpMethod.PATCH, "/api/orders/*/deliver").hasAnyRole("admin", "almacenista")
+                        // Todo lo demás en /api/admin/** requiere admin
                         .requestMatchers("/api/admin/**").hasRole("admin")
                         .anyRequest().authenticated()
                 )

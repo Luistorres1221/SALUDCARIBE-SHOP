@@ -25,17 +25,43 @@ public class DataInitializer implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final WarehouseRepository warehouseRepository;
     private final WarehouseStockRepository warehouseStockRepository;
+    private final CargoRepository cargoRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(String... args) {
-        dropLegacyStatusConstraint();
+        dropLegacyConstraints();
         seedAdmin();
         seedCategoriesAndProducts();
         seedWarehouses();
+        seedCargos();
     }
 
+    private void dropLegacyConstraints() {
+        // Eliminar constraints de CHECK que impiden insertar nuevos valores de enum
+        String[] drops = {
+            "ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check",
+            // Hibernate puede generar un constraint de CHECK en user_roles.role con los valores
+            // originales del enum (sin empleado/almacenista). Lo eliminamos para permitir los nuevos roles.
+            "DO $$ DECLARE r RECORD; BEGIN " +
+            "FOR r IN (SELECT conname FROM pg_constraint c " +
+            "JOIN pg_class t ON c.conrelid = t.oid " +
+            "WHERE t.relname = 'user_roles' AND c.contype = 'c') " +
+            "LOOP EXECUTE 'ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS ' || r.conname; END LOOP; END $$",
+        };
+        for (String sql : drops) {
+            try {
+                jdbcTemplate.execute(sql);
+            } catch (Exception e) {
+                log.warn("No se pudo ejecutar drop constraint: {}", e.getMessage());
+            }
+        }
+        log.info("Legacy constraints revisados.");
+    }
+
+    /** @deprecated reemplazado por dropLegacyConstraints */
+    @SuppressWarnings("unused")
     private void dropLegacyStatusConstraint() {
         try {
             jdbcTemplate.execute(
@@ -179,6 +205,25 @@ public class DataInitializer implements CommandLineRunner {
 
         log.info("Bodegas creadas: Almacén Principal (Cartagena), Subbodega Cartagena, Subbodega Armenia.");
         log.info("Stock inicial cargado en Almacén Principal para {} productos.", products.size());
+    }
+
+    private void seedCargos() {
+        if (!cargoRepository.findAll().isEmpty()) return;
+        String[][] cargos = {
+            {"Médico",                    "Profesional de medicina general u especialista"},
+            {"Odontólogo",               "Profesional de odontología"},
+            {"Auxiliar de Enfermería",   "Apoyo en procedimientos de enfermería"},
+            {"Auxiliar de Almacén",      "Encargado de gestión de inventario y despacho"},
+            {"Coordinador",              "Coordinación de área o programa"},
+            {"Vacunador",                "Aplicación de esquemas de vacunación"},
+            {"Administrador",            "Gestión administrativa general del sistema"},
+            {"Personal Administrativo",  "Funciones de apoyo administrativo y oficina"},
+        };
+        for (String[] c : cargos) {
+            cargoRepository.save(com.saludcaribe.shop.model.Cargo.builder()
+                    .name(c[0]).description(c[1]).active(true).createdAt(LocalDateTime.now()).build());
+        }
+        log.info("Cargos iniciales creados: {} registros.", cargos.length);
     }
 
     private Category cat(String name, String slug, String description, String icon) {

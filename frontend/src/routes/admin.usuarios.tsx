@@ -1,34 +1,46 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { usersApi, type ApiUser, type UserRequest } from "@/api/users";
+import { cargosApi, type Cargo } from "@/api/cargos";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ROLE_LABELS, AppRole } from "@/lib/auth-context";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AppRole } from "@/lib/auth-context";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Shield } from "lucide-react";
+import { BriefcaseBusiness, Plus, Edit, Trash2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/usuarios")({
   component: AdminUsers,
 });
 
-const ALL_ROLES = Object.keys(ROLE_LABELS) as AppRole[];
-const EMPTY_FORM: UserRequest = { email: "", password: "", fullName: "", area: "" };
+// Solo los 3 roles principales del sistema
+const MAIN_ROLES: { key: AppRole; label: string; description: string }[] = [
+  { key: "admin",       label: "Administrador", description: "Acceso completo al sistema" },
+  { key: "almacenista", label: "Almacenista",   description: "Gestión de inventario y despacho" },
+  { key: "empleado",    label: "Empleado",       description: "Crear y consultar pedidos" },
+];
+
+const EMPTY_FORM: UserRequest = { email: "", password: "", fullName: "", area: "", cargoId: undefined };
 
 function AdminUsers() {
-  const [users, setUsers] = useState<ApiUser[]>([]);
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<ApiUser | null>(null);
-  const [form, setForm] = useState<UserRequest>(EMPTY_FORM);
+  const [users, setUsers]         = useState<ApiUser[]>([]);
+  const [cargos, setCargos]       = useState<Cargo[]>([]);
+  const [open, setOpen]           = useState(false);
+  const [editing, setEditing]     = useState<ApiUser | null>(null);
+  const [form, setForm]           = useState<UserRequest>(EMPTY_FORM);
   const [selectedRoles, setSelectedRoles] = useState<AppRole[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]       = useState(false);
 
   const load = () => usersApi.getAll().then(setUsers).catch(() => {});
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    cargosApi.getActive().then(setCargos).catch(() => {});
+  }, []);
 
   const openNew = () => {
     setEditing(null);
@@ -39,7 +51,7 @@ function AdminUsers() {
 
   const openEdit = (u: ApiUser) => {
     setEditing(u);
-    setForm({ email: u.email, fullName: u.fullName, area: u.area ?? "", password: "" });
+    setForm({ email: u.email, fullName: u.fullName, area: u.area ?? "", password: "", cargoId: u.cargoId ?? undefined });
     setSelectedRoles([...u.roles]);
     setOpen(true);
   };
@@ -61,24 +73,23 @@ function AdminUsers() {
     }
     setSaving(true);
     try {
-      const saved = editing
-        ? await usersApi.update(editing.id, form)
-        : await usersApi.create(form);
-
-      // Sincronizar roles
-      const prevRoles: AppRole[] = editing?.roles ?? [];
-      const toAdd = selectedRoles.filter((r) => !prevRoles.includes(r));
-      const toRemove = prevRoles.filter((r) => !selectedRoles.includes(r));
-      await Promise.all([
-        ...toAdd.map((r) => usersApi.assignRole(saved.id, r)),
-        ...toRemove.map((r) => usersApi.removeRole(saved.id, r)),
-      ]);
-
+      const payload = { ...form, roles: selectedRoles };
+      if (editing) {
+        await usersApi.update(editing.id, payload);
+      } else {
+        await usersApi.create(payload);
+      }
       toast.success(editing ? "Usuario actualizado" : "Usuario creado");
       setOpen(false);
       load();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Error al guardar");
+      const data = err?.response?.data;
+      const msg =
+        data?.message ||
+        data?.detail ||
+        (Array.isArray(data?.errors) ? data.errors.map((e: any) => e.defaultMessage).join(", ") : null) ||
+        `Error HTTP ${err?.response?.status ?? "desconocido"}`;
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -112,13 +123,25 @@ function AdminUsers() {
             <Card key={u.id} className="p-4 flex flex-wrap items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="font-medium">{u.fullName}</div>
-                <div className="text-sm text-muted-foreground">{u.email}{u.area && ` · ${u.area}`}</div>
+                <div className="text-sm text-muted-foreground">
+                  {u.email}
+                  {u.area && ` · ${u.area}`}
+                  {u.cargoName && (
+                    <span className="inline-flex items-center gap-1 ml-1">
+                      · <BriefcaseBusiness className="w-3 h-3 inline" /> {u.cargoName}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {u.roles.map((r) => (
-                    <Badge key={r} variant="secondary" className="text-xs gap-1">
-                      <Shield className="w-3 h-3" />{ROLE_LABELS[r]}
-                    </Badge>
-                  ))}
+                  {u.roles.map((r) => {
+                    const main = MAIN_ROLES.find((m) => m.key === r);
+                    return (
+                      <Badge key={r} variant="secondary" className="text-xs gap-1">
+                        <Shield className="w-3 h-3" />
+                        {main?.label ?? r}
+                      </Badge>
+                    );
+                  })}
                   {u.roles.length === 0 && (
                     <span className="text-xs text-muted-foreground italic">Sin roles asignados</span>
                   )}
@@ -172,7 +195,7 @@ function AdminUsers() {
               />
             </div>
             <div>
-              <Label>Área / Cargo</Label>
+              <Label>Área</Label>
               <Input
                 value={form.area ?? ""}
                 onChange={(e) => setForm({ ...form, area: e.target.value })}
@@ -180,18 +203,42 @@ function AdminUsers() {
               />
             </div>
             <div>
-              <Label className="mb-2 block">Roles</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {ALL_ROLES.map((role) => (
+              <Label>Cargo</Label>
+              <Select
+                value={form.cargoId ?? "none"}
+                onValueChange={(v) => setForm({ ...form, cargoId: v === "none" ? undefined : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona cargo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin cargo asignado</SelectItem>
+                  {cargos.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="mb-2 block">Rol del sistema</Label>
+              <div className="space-y-2">
+                {MAIN_ROLES.map(({ key, label, description }) => (
                   <label
-                    key={role}
-                    className="flex items-center gap-2 p-2 rounded-md border border-border cursor-pointer hover:bg-muted transition-colors"
+                    key={key}
+                    className="flex items-start gap-3 p-3 rounded-md border border-border cursor-pointer hover:bg-muted transition-colors"
                   >
                     <Checkbox
-                      checked={selectedRoles.includes(role)}
-                      onCheckedChange={() => toggleRole(role)}
+                      checked={selectedRoles.includes(key)}
+                      onCheckedChange={() => toggleRole(key)}
+                      className="mt-0.5"
                     />
-                    <span className="text-sm">{ROLE_LABELS[role]}</span>
+                    <div>
+                      <div className="text-sm font-medium flex items-center gap-1.5">
+                        <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                        {label}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{description}</div>
+                    </div>
                   </label>
                 ))}
               </div>

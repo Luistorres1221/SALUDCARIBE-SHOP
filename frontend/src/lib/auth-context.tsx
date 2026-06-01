@@ -8,7 +8,9 @@ export type AppRole =
   | "enfermeria"
   | "administrativo"
   | "aseo"
-  | "papeleria";
+  | "papeleria"
+  | "empleado"
+  | "almacenista";
 
 interface AuthUser {
   id: string;
@@ -21,8 +23,9 @@ interface AuthUser {
 interface AuthCtx {
   user: AuthUser | null;
   isAdmin: boolean;
+  isAlmacenista: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthUser>;
   signUp: (email: string, password: string, fullName: string, area?: string) => Promise<void>;
   signOut: () => void;
 }
@@ -48,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    // Decode JWT payload to restore user without an extra request
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const isExpired = payload.exp * 1000 < Date.now();
@@ -56,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
       } else {
-        // User info lives in localStorage alongside the token
         const stored = localStorage.getItem("authUser");
         if (stored) setUser(JSON.parse(stored));
       }
@@ -66,12 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthUser> => {
     const res = await authApi.login({ email, password });
     storeTokens(res);
     const u = buildUser(res);
     localStorage.setItem("authUser", JSON.stringify(u));
     setUser(u);
+    return u;
   };
 
   const signUp = async (email: string, password: string, fullName: string, area?: string) => {
@@ -89,8 +91,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const isAdmin       = user?.roles?.includes("admin")       ?? false;
+  const isAlmacenista = user?.roles?.includes("almacenista") ?? false;
+
   return (
-    <Ctx.Provider value={{ user, isAdmin: user?.roles?.includes("admin") ?? false, loading, signIn, signUp, signOut }}>
+    <Ctx.Provider value={{ user, isAdmin, isAlmacenista, loading, signIn, signUp, signOut }}>
       {children}
     </Ctx.Provider>
   );
@@ -103,11 +108,13 @@ export function useAuth() {
 }
 
 export const ROLE_LABELS: Record<AppRole, string> = {
-  admin: "Administrador",
-  medico: "Médico",
-  odontologia: "Auxiliar de Odontología",
-  enfermeria: "Enfermería",
-  administrativo: "Administrativo",
-  aseo: "Aseo",
-  papeleria: "Papelería",
+  admin:           "Administrador",
+  medico:          "Médico",
+  odontologia:     "Auxiliar de Odontología",
+  enfermeria:      "Enfermería",
+  administrativo:  "Administrativo",
+  aseo:            "Aseo",
+  papeleria:       "Papelería",
+  empleado:        "Empleado",
+  almacenista:     "Almacenista",
 };

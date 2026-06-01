@@ -6,6 +6,8 @@ export interface ApiUser {
   email: string;
   fullName: string;
   area: string | null;
+  cargoId: string | null;
+  cargoName: string | null;
   roles: AppRole[];
   createdAt: string;
 }
@@ -15,6 +17,8 @@ export interface UserRequest {
   password?: string;
   fullName: string;
   area?: string;
+  cargoId?: string;
+  roles?: AppRole[];
 }
 
 export const usersApi = {

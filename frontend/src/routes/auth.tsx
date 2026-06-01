@@ -23,9 +23,10 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signIn(email, pwd);
+      const loggedUser = await signIn(email, pwd);
       toast.success("Bienvenido");
-      navigate({ to: "/" });
+      const goToPanel = loggedUser.roles.includes("admin") || loggedUser.roles.includes("almacenista");
+      navigate({ to: goToPanel ? "/admin" : "/" });
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Credenciales incorrectas");
     } finally {

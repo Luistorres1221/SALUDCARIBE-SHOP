@@ -31,16 +31,16 @@ public class OrderController {
 
     // RF-045 y RF-046: visualización y filtros de pedidos (filtros en frontend)
     @GetMapping
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public List<OrderResponse> getAllOrders() {
         return orderService.getAllOrders();
     }
 
     @GetMapping("/{id}")
     public OrderResponse findById(@AuthenticationPrincipal UserDetails ud, @PathVariable UUID id) {
-        boolean isAdmin = ud.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_admin"));
-        return orderService.findById(id, resolveUserId(ud), isAdmin);
+        boolean isPrivileged = ud.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_admin") || a.getAuthority().equals("ROLE_almacenista"));
+        return orderService.findById(id, resolveUserId(ud), isPrivileged);
     }
 
     @PostMapping
@@ -60,7 +60,7 @@ public class OrderController {
 
     // RF-048 a RF-057: entregas parciales
     @PatchMapping("/{id}/deliver")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public OrderResponse deliver(
             @PathVariable UUID id,
             @Valid @RequestBody DeliverOrderRequest req,

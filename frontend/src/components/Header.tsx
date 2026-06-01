@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isAlmacenista, signOut } = useAuth();
+  const hasPanel = isAdmin || isAlmacenista;
   const { count } = useCart();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -51,10 +52,11 @@ export function Header() {
 
         {user ? (
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {isAdmin && (
+            {hasPanel && (
               <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex text-brand-foreground hover:bg-card/40">
                 <Link to="/admin">
-                  <LayoutDashboard className="w-4 h-4 mr-1" /> Admin
+                  <LayoutDashboard className="w-4 h-4 mr-1" />
+                  {isAdmin ? "Admin" : "Almacén"}
                 </Link>
               </Button>
             )}
@@ -95,9 +97,9 @@ export function Header() {
                 <DropdownMenuItem onClick={() => navigate({ to: "/pedidos" })}>
                   Mis pedidos
                 </DropdownMenuItem>
-                {isAdmin && (
+                {hasPanel && (
                   <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
-                    Panel admin
+                    {isAdmin ? "Panel admin" : "Panel almacén"}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />

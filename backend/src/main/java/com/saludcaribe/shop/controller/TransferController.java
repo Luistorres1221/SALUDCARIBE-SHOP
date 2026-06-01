@@ -28,13 +28,13 @@ public class TransferController {
     }
 
     @GetMapping("/admin/transfers")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<List<TransferResponse>> getAll() {
         return ResponseEntity.ok(transferService.findAll());
     }
 
     @GetMapping("/admin/transfers/{id}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin','almacenista')")
     public ResponseEntity<TransferResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(transferService.findById(id));
     }
