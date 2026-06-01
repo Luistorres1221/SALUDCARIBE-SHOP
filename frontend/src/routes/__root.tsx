@@ -4,6 +4,39 @@ import { CartProvider } from "@/lib/cart-context";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+
+// ── Keep-alive: evita que Render hiberne el backend en el plan gratuito ────────
+// Hace un GET a /api/ping cada 4 minutos. Render duerme el servicio a los 15 min
+// de inactividad; con este intervalo nunca se alcanza ese umbral mientras haya
+// al menos una pestaña del frontend abierta.
+const PING_INTERVAL_MS = 4 * 60 * 1000; // 4 minutos
+
+function RootLayout() {
+  useEffect(() => {
+    const ping = () =>
+      fetch("/api/ping", { method: "GET", cache: "no-store" }).catch(() => {});
+
+    ping(); // Primer ping al cargar la app
+    const id = setInterval(ping, PING_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
+        <Toaster richColors position="top-right" />
+      </CartProvider>
+    </AuthProvider>
+  );
+}
 
 function NotFoundComponent() {
   return (
@@ -28,19 +61,6 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
-  component: () => (
-    <AuthProvider>
-      <CartProvider>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
-        <Toaster richColors position="top-right" />
-      </CartProvider>
-    </AuthProvider>
-  ),
+  component: RootLayout,
   notFoundComponent: NotFoundComponent,
 });
