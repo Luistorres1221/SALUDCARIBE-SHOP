@@ -695,9 +695,9 @@ function AdminTraslados() {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[380px] p-0" align="start">
-                          <Command>
+                          <Command className="h-auto">
                             <CommandInput placeholder="Buscar por nombre o SKU..." className="h-9" />
-                            <CommandList>
+                            <CommandList className="max-h-[260px] overflow-y-auto">
                               <CommandEmpty>Sin resultados.</CommandEmpty>
                               {products.filter((p) => p.active).map((p) => (
                                 <CommandItem
