@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { productsApi } from "@/api/products";
 import { ordersApi, type Order } from "@/api/orders";
 import { usersApi } from "@/api/users";
+import { inventoryApi } from "@/api/inventory";
+import { warehousesApi } from "@/api/warehouses";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCOP } from "@/lib/cart-context";
-import { Building2, Package, ShoppingCart, TrendingDown, TrendingUp, Trophy, Users } from "lucide-react";
+import { Building2, Package, ShoppingCart, TrendingDown, TrendingUp, Trophy, Users, Warehouse } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -54,6 +56,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 type Insight = { name: string; value: number };
 type CCRow   = { name: string; total: number; count: number };
+type WarehouseValue = {
+  id: string;
+  name: string;
+  type: string;
+  totalValue: number;
+  totalUnits: number;
+  products: number;
+};
 
 function Dashboard() {
   const [stats, setStats]               = useState({ products: 0, orders: 0, users: 0, revenue: 0 });
@@ -65,6 +75,7 @@ function Dashboard() {
   const [topArea, setTopArea]           = useState<Insight | null>(null);
   const [byCostCenter, setByCostCenter] = useState<CCRow[]>([]);
   const [allOrders, setAllOrders]       = useState<Order[]>([]);
+  const [warehouseValues, setWarehouseValues] = useState<WarehouseValue[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -157,6 +168,27 @@ function Dashboard() {
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    Promise.all([warehousesApi.getAll(), inventoryApi.getAllStock()])
+      .then(([warehouses, allStock]) => {
+        const values: WarehouseValue[] = warehouses
+          .filter((w) => w.active)
+          .map((w) => {
+            const wStock = allStock.filter((s) => s.warehouseId === w.id);
+            const totalValue = wStock.reduce((sum, s) => sum + s.quantity * Number(s.productPrice), 0);
+            const totalUnits = wStock.reduce((sum, s) => sum + s.quantity, 0);
+            return { id: w.id, name: w.name, type: w.type, totalValue, totalUnits, products: wStock.length };
+          })
+          .sort((a, b) => {
+            if (a.type === "PRINCIPAL" && b.type !== "PRINCIPAL") return -1;
+            if (a.type !== "PRINCIPAL" && b.type === "PRINCIPAL") return 1;
+            return b.totalValue - a.totalValue;
+          });
+        setWarehouseValues(values);
+      })
+      .catch(() => {});
+  }, []);
+
   const tiles = [
     { label: "Productos", value: stats.products,        icon: Package,    color: "text-primary"     },
     { label: "Pedidos",   value: stats.orders,           icon: ShoppingCart, color: "text-blue-500"  },
@@ -211,6 +243,53 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Valor de inventario por bodega */}
+      {warehouseValues.length > 0 && (
+        <div>
+          <h2 className="text-base font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
+            <Warehouse className="w-4 h-4" />
+            Valor de inventario por bodega
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {warehouseValues.map((w) => {
+              const isPrincipal = w.type === "PRINCIPAL";
+              return (
+                <Card
+                  key={w.id}
+                  className={`p-4 flex items-start gap-3 shadow-card border-l-4 ${
+                    isPrincipal ? "border-l-primary" : "border-l-muted-foreground/30"
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                      isPrincipal ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <Warehouse className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-medium truncate">{w.name}</span>
+                      {isPrincipal && (
+                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                    <div className={`font-bold text-lg leading-tight mt-0.5 ${isPrincipal ? "text-primary" : ""}`}>
+                      {formatCOP(w.totalValue)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {w.totalUnits} uds · {w.products} producto{w.products !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Insights */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
