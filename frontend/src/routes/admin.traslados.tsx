@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeftRight, CheckCircle, Download, Plus, Trash2, XCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ArrowLeftRight, Check, CheckCircle, ChevronsUpDown, Download, Plus, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -314,10 +316,11 @@ function AdminTraslados() {
   const [saving, setSaving]         = useState(false);
 
   // Create form state
-  const [fromWh, setFromWh] = useState("");
-  const [toWh, setToWh]     = useState("");
-  const [notes, setNotes]   = useState("");
-  const [items, setItems]   = useState<NewItem[]>([{ productId: "", requestedQuantity: 1 }]);
+  const [fromWh, setFromWh]           = useState("");
+  const [toWh, setToWh]               = useState("");
+  const [notes, setNotes]             = useState("");
+  const [items, setItems]             = useState<NewItem[]>([{ productId: "", requestedQuantity: 1 }]);
+  const [openProductIdx, setOpenProductIdx] = useState<number>(-1);
 
   const load = () => transfersApi.getAll().then(setTransfers).catch(() => {});
 
@@ -668,34 +671,70 @@ function AdminTraslados() {
                   <Plus className="w-3 h-3 mr-1" /> Agregar
                 </Button>
               </div>
-              {items.map((item, i) => (
-                <div key={i} className="flex gap-2 items-end">
-                  <div className="flex-1 space-y-1">
-                    <Select value={item.productId} onValueChange={(v) => setItem(i, "productId", v)}>
-                      <SelectTrigger className="h-8 text-sm">
-                        <SelectValue placeholder="Producto..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.filter((p) => p.active).map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.sku} — {p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {items.map((item, i) => {
+                const selectedProduct = products.find((p) => p.id === item.productId);
+                return (
+                  <div key={i} className="flex gap-2 items-center">
+                    <div className="flex-1">
+                      <Popover
+                        open={openProductIdx === i}
+                        onOpenChange={(o) => setOpenProductIdx(o ? i : -1)}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="h-8 w-full justify-between text-sm font-normal truncate"
+                          >
+                            <span className="truncate">
+                              {selectedProduct
+                                ? `${selectedProduct.sku} — ${selectedProduct.name}`
+                                : "Buscar producto..."}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[380px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Buscar por nombre o SKU..." className="h-9" />
+                            <CommandList>
+                              <CommandEmpty>Sin resultados.</CommandEmpty>
+                              {products.filter((p) => p.active).map((p) => (
+                                <CommandItem
+                                  key={p.id}
+                                  value={`${p.sku} ${p.name}`}
+                                  onSelect={() => {
+                                    setItem(i, "productId", p.id);
+                                    setOpenProductIdx(-1);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn("mr-2 h-4 w-4 shrink-0", item.productId === p.id ? "opacity-100" : "opacity-0")}
+                                  />
+                                  <span className="font-mono text-xs mr-2 text-muted-foreground">{p.sku}</span>
+                                  {p.name}
+                                </CommandItem>
+                              ))}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <Input
+                      type="number"
+                      min={1}
+                      className="w-24 h-8 text-sm"
+                      value={item.requestedQuantity}
+                      onChange={(e) => setItem(i, "requestedQuantity", Number(e.target.value))}
+                    />
+                    {items.length > 1 && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => removeItem(i)}>
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    )}
                   </div>
-                  <Input
-                    type="number"
-                    min={1}
-                    className="w-24 h-8 text-sm"
-                    value={item.requestedQuantity}
-                    onChange={(e) => setItem(i, "requestedQuantity", Number(e.target.value))}
-                  />
-                  {items.length > 1 && (
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => removeItem(i)}>
-                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <DialogFooter>
