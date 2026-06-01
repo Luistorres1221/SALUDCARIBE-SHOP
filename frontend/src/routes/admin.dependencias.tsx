@@ -68,13 +68,13 @@ function AdminDependencies() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("¿Desactivar esta dependencia?")) return;
+    if (!confirm("¿Eliminar esta dependencia? Esta acción no se puede deshacer.")) return;
     try {
       await dependenciesApi.remove(id);
-      toast.success("Dependencia desactivada");
-      load();
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      toast.success("Dependencia eliminada");
     } catch {
-      toast.error("No se pudo desactivar");
+      toast.error("No se pudo eliminar");
     }
   };
 
@@ -114,7 +114,6 @@ function AdminDependencies() {
                   size="icon"
                   variant="ghost"
                   onClick={() => remove(item.id)}
-                  disabled={!item.active}
                 >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>

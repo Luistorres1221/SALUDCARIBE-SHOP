@@ -49,10 +49,10 @@ public class DependencyService {
     }
 
     public void delete(UUID id) {
-        Dependency dep = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Dependencia no encontrada"));
-        dep.setActive(false);
-        repository.save(dep);
+        if (!repository.existsById(id)) {
+            throw new IllegalArgumentException("Dependencia no encontrada");
+        }
+        repository.deleteById(id);
     }
 
     private DependencyResponse toResponse(Dependency dep) {

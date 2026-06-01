@@ -68,13 +68,13 @@ function AdminCostCenters() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("¿Desactivar este centro de costo?")) return;
+    if (!confirm("¿Eliminar este centro de costo? Esta acción no se puede deshacer.")) return;
     try {
       await costCentersApi.remove(id);
-      toast.success("Centro de costo desactivado");
-      load();
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      toast.success("Centro de costo eliminado");
     } catch {
-      toast.error("No se pudo desactivar");
+      toast.error("No se pudo eliminar");
     }
   };
 
@@ -114,7 +114,6 @@ function AdminCostCenters() {
                   size="icon"
                   variant="ghost"
                   onClick={() => remove(item.id)}
-                  disabled={!item.active}
                 >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>

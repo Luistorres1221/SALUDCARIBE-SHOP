@@ -51,10 +51,10 @@ public class CostCenterService {
     }
 
     public void delete(UUID id) {
-        CostCenter cc = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Centro de costo no encontrado"));
-        cc.setActive(false);
-        repository.save(cc);
+        if (!repository.existsById(id)) {
+            throw new IllegalArgumentException("Centro de costo no encontrado");
+        }
+        repository.deleteById(id);
     }
 
     private CostCenterResponse toResponse(CostCenter cc) {
