@@ -42,6 +42,7 @@ export function useInactivityTimeout(isLoggedIn: boolean, onLogout: () => void) 
 
   const extendSession = useCallback(() => {
     warningVisible.current = false;
+    setShowWarning(false);
     resetTimers();
   }, [resetTimers]);
 
