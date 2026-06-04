@@ -5,6 +5,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
+// Keep the backend alive by pinging every 4 minutes while the app is open.
+// This prevents free-tier hosting services (Render, Railway, etc.) from
+// suspending the container due to inactivity.
+(function startKeepAlive() {
+  const url = `${import.meta.env.VITE_API_BASE_URL ?? ""}/api/ping`;
+  const ping = () => fetch(url).catch(() => {});
+  ping();
+  setInterval(ping, 5 * 60 * 1000);
+})();
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
 });
