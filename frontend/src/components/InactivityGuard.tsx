@@ -13,16 +13,23 @@ import {
 
 export function InactivityGuard() {
   const { user, signOut } = useAuth();
-  const { showWarning, extendSession } = useInactivityTimeout(!!user, signOut);
+  const { showWarning, countdown, extendSession } = useInactivityTimeout(!!user, signOut);
 
   return (
     <AlertDialog open={showWarning}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Sigues ahí?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tu sesión se cerrará automáticamente en <strong>30 segundos</strong> por
-            inactividad. ¿Deseas continuar trabajando?
+          <AlertDialogDescription asChild>
+            <div>
+              <p>Tu sesión se cerrará automáticamente por inactividad.</p>
+              <p className="mt-3 text-center">
+                <span className="text-5xl font-bold tabular-nums text-foreground">
+                  {countdown}
+                </span>
+                <span className="block text-sm text-muted-foreground">segundos restantes</span>
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

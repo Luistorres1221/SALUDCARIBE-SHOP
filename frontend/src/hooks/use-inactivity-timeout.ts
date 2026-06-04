@@ -7,23 +7,33 @@ const ACTIVITY_EVENTS = [
   "mousemove", "mousedown", "keydown", "touchstart", "scroll", "click",
 ] as const;
 
+const COUNTDOWN_SECS = 30;
+
 export function useInactivityTimeout(isLoggedIn: boolean, onLogout: () => void) {
   const [showWarning, setShowWarning] = useState(false);
+  const [countdown,   setCountdown]   = useState(COUNTDOWN_SECS);
 
   const warnTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoutTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const warningVisible = useRef(false); // ref para no crear closures stale en listeners
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const warningVisible = useRef(false);
   const onLogoutRef    = useRef(onLogout);
   onLogoutRef.current  = onLogout;
 
   const clearTimers = useCallback(() => {
-    if (warnTimer.current)   clearTimeout(warnTimer.current);
-    if (logoutTimer.current) clearTimeout(logoutTimer.current);
+    if (warnTimer.current)      clearTimeout(warnTimer.current);
+    if (logoutTimer.current)    clearTimeout(logoutTimer.current);
+    if (countdownTimer.current) clearInterval(countdownTimer.current);
+  }, []);
+
+  const startCountdown = useCallback(() => {
+    setCountdown(COUNTDOWN_SECS);
+    countdownTimer.current = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
   }, []);
 
   const resetTimers = useCallback(() => {
-    // Si el aviso ya está visible, la actividad no reinicia la sesión:
-    // el usuario debe hacer clic explícitamente en "Continuar".
     if (warningVisible.current) return;
 
     clearTimers();
@@ -31,6 +41,7 @@ export function useInactivityTimeout(isLoggedIn: boolean, onLogout: () => void) 
     warnTimer.current = setTimeout(() => {
       warningVisible.current = true;
       setShowWarning(true);
+      startCountdown();
     }, WARN_AFTER_MS);
 
     logoutTimer.current = setTimeout(() => {
@@ -38,11 +49,12 @@ export function useInactivityTimeout(isLoggedIn: boolean, onLogout: () => void) 
       setShowWarning(false);
       onLogoutRef.current();
     }, LOGOUT_AFTER_MS);
-  }, [clearTimers]);
+  }, [clearTimers, startCountdown]);
 
   const extendSession = useCallback(() => {
     warningVisible.current = false;
     setShowWarning(false);
+    setCountdown(COUNTDOWN_SECS);
     resetTimers();
   }, [resetTimers]);
 
@@ -51,6 +63,7 @@ export function useInactivityTimeout(isLoggedIn: boolean, onLogout: () => void) 
       clearTimers();
       warningVisible.current = false;
       setShowWarning(false);
+      setCountdown(COUNTDOWN_SECS);
       return;
     }
 
@@ -63,5 +76,5 @@ export function useInactivityTimeout(isLoggedIn: boolean, onLogout: () => void) 
     };
   }, [isLoggedIn, resetTimers, clearTimers]);
 
-  return { showWarning, extendSession };
+  return { showWarning, countdown, extendSession };
 }
