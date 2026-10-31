@@ -18,11 +18,11 @@ La instancia existente ya tiene un volumen EBS raiz de 20 GiB. **No ejecutes `mk
 
 ```bash
 df -h /
-sudo mkdir -p /srv/caribeshop/postgres /srv/caribeshop/uploads
+sudo mkdir -p /srv/caribeshop/postgres18 /srv/caribeshop/uploads
 sudo chmod 755 /srv/caribeshop
 ```
 
-En `.env` conserva `APP_DATA_DIR=/srv/caribeshop`. Tanto `/srv/caribeshop/postgres` como `/srv/caribeshop/uploads` quedaran en el volumen EBS raiz y sobreviviran a los reinicios y reconstrucciones de contenedores. Revisa periodicamente `df -h /`; 20 GiB son el espacio compartido por el sistema, Docker, la base y las imagenes. No termines la instancia sin verificar que el volumen raiz no se eliminara o sin tener un backup.
+En `.env` conserva `APP_DATA_DIR=/srv/caribeshop`. PostgreSQL 18 usa `/srv/caribeshop/postgres18` en el volumen EBS raiz; las imagenes quedan en `/srv/caribeshop/uploads`. Si la instancia ya se habia iniciado con PostgreSQL 16, su carpeta anterior `/srv/caribeshop/postgres` se conserva aparte y no se reutiliza ni se borra. PostgreSQL 18 cambio la ruta de montaje recomendada de la imagen oficial; por eso Compose monta la carpeta en `/var/lib/postgresql`. Revisa periodicamente `df -h /`; 20 GiB son el espacio compartido por el sistema, Docker, la base y las imagenes. No termines la instancia sin verificar que el volumen raiz no se eliminara o sin tener un backup. [Documentacion de la imagen oficial de PostgreSQL](https://hub.docker.com/_/postgres).
 
 ### Opcional: agregar otro volumen EBS mas adelante
 
@@ -136,7 +136,7 @@ Abre `http://IP_PUBLICA` o `https://tu-dominio`. Inicia sesion con `BOOTSTRAP_AD
 ## Donde quedan las imagenes y la base de datos
 
 - Imagenes cargadas desde el panel: `/srv/caribeshop/uploads` en el volumen EBS. El backend las lee desde `/app/uploads` dentro del contenedor.
-- Archivos de PostgreSQL: `/srv/caribeshop/postgres` en ese mismo EBS.
+- Archivos de PostgreSQL 18: `/srv/caribeshop/postgres18` en ese mismo EBS.
 - Caddy mantiene sus certificados en volumenes Docker.
 
 Los contenedores se pueden reconstruir o reemplazar sin borrar esos directorios. Programa snapshots EBS y respaldos; EBS no sustituye un backup. Para escalar a varias instancias o separar los archivos del servidor, S3 es la alternativa recomendada: requeriria cambiar el backend para cargar y servir objetos desde S3. Esta configuracion deja las imagenes locales en EBS, sin necesitar Cloudinary.

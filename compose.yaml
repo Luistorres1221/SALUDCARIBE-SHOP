@@ -1,13 +1,13 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:?Define DB_NAME en .env}
       POSTGRES_USER: ${DB_USER:?Define DB_USER en .env}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
     volumes:
-      - ${APP_DATA_DIR:-./data}/postgres:/var/lib/postgresql/data
+      - ${APP_DATA_DIR:-./data}/postgres18:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
