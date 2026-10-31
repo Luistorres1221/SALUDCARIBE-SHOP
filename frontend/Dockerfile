@@ -5,6 +5,7 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 COPY package*.json ./
 RUN npm ci
 COPY . .
+ENV NODE_OPTIONS=--max-old-space-size=768
 RUN npm run build
 
 FROM caddy:2-alpine
