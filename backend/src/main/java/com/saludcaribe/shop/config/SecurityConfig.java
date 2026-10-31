@@ -55,9 +55,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/admin/cargos/**").hasAnyRole("admin", "almacenista")
                         // Almacenista: lectura y entrega de pedidos
                         .requestMatchers(HttpMethod.GET, "/api/orders").hasAnyRole("admin", "almacenista")
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("admin", "almacenista")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/orders/*/deliver").hasAnyRole("admin", "almacenista")
-                        // Todo lo demás en /api/admin/** requiere admin
+                        // Todo lo demÃ¡s en /api/admin/** requiere admin
                         .requestMatchers("/api/admin/**").hasRole("admin")
                         .anyRequest().authenticated()
                 )

@@ -1,0 +1,9 @@
+# Copy this file to application-local.properties and change the database password.
+spring.datasource.url=jdbc:postgresql://localhost:5432/saludcaribe
+spring.datasource.username=saludcaribe_user
+spring.datasource.password=CAMBIA_ESTA_CLAVE_DB
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+app.bootstrap.admin.email=admin@saludcaribe.com
+app.bootstrap.admin.password=CAMBIA_ESTA_CLAVE_ADMIN

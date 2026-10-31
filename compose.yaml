@@ -1,0 +1,73 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?Define DB_NAME en .env}
+      POSTGRES_USER: ${DB_USER:?Define DB_USER en .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+    volumes:
+      - ${APP_DATA_DIR:-./data}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [internal]
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:?Define DB_NAME en .env}
+      DB_USER: ${DB_USER:?Define DB_USER en .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+      DDL_AUTO: ${DDL_AUTO:-update}
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?Define BOOTSTRAP_ADMIN_EMAIL en .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Define BOOTSTRAP_ADMIN_PASSWORD en .env}
+      UPLOADS_DIR: /app/uploads
+      SERVER_ERROR_INCLUDE_MESSAGE: never
+      SERVER_ERROR_INCLUDE_BINDING_ERRORS: never
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    volumes:
+      - ${APP_DATA_DIR:-./data}/uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

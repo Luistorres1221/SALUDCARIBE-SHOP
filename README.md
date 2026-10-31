@@ -1,5 +1,7 @@
 # SaludCaribe Shop
 
+Guia local de PostgreSQL y pgAdmin: [backend/POSTGRES-SETUP.md](backend/POSTGRES-SETUP.md).
+
 Sistema de gestión de inventario y pedidos para **SaludCaribe**, diseñado para administrar insumos médicos, odontológicos, de enfermería, aseo y papelería. Incluye panel de administración completo, carrito de compras y seguimiento de pedidos.
 
 > **Frontend:** https://saludcaribe-shop.vercel.app  
@@ -77,7 +79,7 @@ SALUDCARIBE-SHOP/
 │       ├── controller/             # AuthController, ProductController, ...
 │       ├── dto/                    # Request/Response DTOs
 │       ├── model/                  # User, Product, Category, Cart, Order, AppRole
-│       ├── repository/             # Repositorios con JsonFileStore (ConcurrentHashMap)
+│       ├── repository/             # Repositorios JPA sobre PostgreSQL
 │       ├── security/               # JwtAuthenticationFilter, JwtService
 │       └── service/                # AuthService, ProductService, CartService, ...
 ├── frontend/
@@ -94,31 +96,16 @@ SALUDCARIBE-SHOP/
 
 ## Ejecución local
 
-### Requisitos
-- Java 21 (JDK)
-- Maven 3.8+
-- Node.js 18+
+La configuracion completa de PostgreSQL, pgAdmin y las tablas esta en [backend/POSTGRES-SETUP.md](backend/POSTGRES-SETUP.md).
 
-### 1. Backend
+Se necesita PostgreSQL Server local en ejecucion, ademas de pgAdmin. Configura la base y el perfil local antes de arrancar el backend:
 
-```bash
+```powershell
 cd backend
-mvn spring-boot:run
-# API disponible en http://localhost:8080
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Al iniciar por primera vez se cargan automáticamente 5 categorías y 20 productos de muestra.
-
-### 2. Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-# App disponible en http://localhost:5173
-```
-
-> El proxy de Vite redirige `/api` → `http://localhost:8080` en desarrollo.
+En otra terminal inicia el frontend con `cd frontend`, `npm install` y `npm run dev`.
 
 ---
 
@@ -147,12 +134,11 @@ El backend está dockerizado con un `Dockerfile` multi-stage listo para Render.
 |---|---|
 | `JWT_SECRET` | Genera un valor seguro (mínimo 32 chars) |
 | `CORS_ORIGINS` | URL de tu frontend en Vercel (ej: `https://saludcaribe-shop.vercel.app`) |
-| `DATA_DIR` | `/app/data` |
 | `UPLOADS_DIR` | `/app/uploads` |
 
 5. Haz clic en **Deploy**.
 
-> **Nota sobre persistencia:** En el plan gratuito de Render, el sistema de archivos es efímero. Los datos (JSON) y las imágenes subidas se perderán al reiniciar el servicio. El `DataInitializer` recargará los datos de muestra automáticamente. Para persistencia real, agrega un **Disk** en Render montado en `/app/data`.
+> PostgreSQL guarda los datos en la base administrada. Los archivos JSON heredados no se importan automaticamente.
 
 ---
 
@@ -197,16 +183,19 @@ Después de ambos despliegues:
 
 ## Credenciales de acceso
 
+Configura el administrador local con `BOOTSTRAP_ADMIN_EMAIL` y `BOOTSTRAP_ADMIN_PASSWORD`. Usa una clave propia y cambiala despues del primer acceso.
+
 | Campo | Valor |
 |---|---|
 | **Email** | `admin@saludcaribe.com` |
-| **Contraseña** | `Admin1234!` |
+| **Contrasena** | La que configures en `BOOTSTRAP_ADMIN_PASSWORD` |
 | **Rol** | Administrador |
 
-> Solo el administrador puede crear usuarios y asignar roles. El registro público está deshabilitado.
+Estas credenciales son solo para desarrollo local. En produccion configura `BOOTSTRAP_ADMIN_PASSWORD` como secreto antes del primer arranque de una base nueva. Si la cuenta ya existe, el inicializador no cambia su contrasena ni sus roles.
+
+> Solo el administrador puede crear usuarios y asignar roles. El registro publico esta deshabilitado.
 
 ---
-
 ## Roles del sistema
 
 | Rol | Descripción |
@@ -278,16 +267,24 @@ Después de ambos despliegues:
 
 ## Variables de entorno
 
-### Backend (`application.properties` / Render)
+### Backend
 
-| Variable | Default (dev) | Producción |
+| Variable | Local | Descripcion |
 |---|---|---|
-| `PORT` | `8080` | Asignado por Render automáticamente |
-| `JWT_SECRET` | `CAMBIA_ESTE_SECRETO...` | Clave segura ≥ 32 chars |
-| `CORS_ORIGINS` | `http://localhost:5173` | URL de Vercel |
-| `DATA_DIR` | `./data` | `/app/data` |
-| `UPLOADS_DIR` | `./uploads` | `/app/uploads` |
+| `PORT` | `8080` | Puerto HTTP |
+| `DB_HOST` | `localhost` | Host de PostgreSQL |
+| `DB_PORT` | `5432` | Puerto de PostgreSQL |
+| `DB_NAME` | `saludcaribe` | Nombre de la base |
+| `DB_USER` | `saludcaribe_user` | Usuario de la aplicacion |
+| `DB_PASSWORD` | Configuracion local ignorada por Git | Clave de PostgreSQL |
+| `DDL_AUTO` | `update` | Actualiza el esquema JPA al iniciar |
+| `BOOTSTRAP_ADMIN_EMAIL` | `admin@saludcaribe.com` | Correo usado solo si hay que crear el administrador |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Sin valor predeterminado | Sin valor, no crea una cuenta de administrador |
+| `JWT_SECRET` | Clave de desarrollo | En produccion usa una clave segura de 32 caracteres o mas |
+| `CORS_ORIGINS` | `http://localhost:5173` | Origen permitido para el frontend |
+| `UPLOADS_DIR` | `./uploads` | Carpeta para archivos subidos |
 
+Render configura las variables de PostgreSQL desde la base administrada. Configura `BOOTSTRAP_ADMIN_PASSWORD` como secreto antes del primer arranque de una base nueva.
 ### Frontend (Vite / Vercel)
 
 | Variable | Default (dev) | Producción |
@@ -298,19 +295,19 @@ Después de ambos despliegues:
 
 ## Docker (local)
 
-Para probar el backend dockerizado localmente:
+Si ejecutas el backend dentro de Docker y PostgreSQL esta instalado directamente en Windows, usa `host.docker.internal` como host:
 
-```bash
+```powershell
 cd backend
 docker build -t saludcaribe-backend .
-docker run -p 8080:8080 \
-  -e JWT_SECRET=mi_secreto_seguro_de_al_menos_32_caracteres \
-  -e CORS_ORIGINS=http://localhost:5173 \
-  saludcaribe-backend
+docker run --rm -p 8080:8080 -e DB_HOST=host.docker.internal -e DB_PORT=5432 -e DB_NAME=saludcaribe -e DB_USER=saludcaribe_user -e DB_PASSWORD=CAMBIA_ESTA_CLAVE_DB -e BOOTSTRAP_ADMIN_PASSWORD=CAMBIA_ESTA_CLAVE_ADMIN -e JWT_SECRET=CAMBIA_ESTE_SECRETO_POR_UNO_DE_32_CARACTERES -e CORS_ORIGINS=http://localhost:5173 saludcaribe-backend
 ```
 
----
+## Despliegue en AWS EC2
 
+La receta de produccion con Docker Compose, HTTPS opcional por dominio y almacenamiento persistente EBS para PostgreSQL e imagenes esta en [EC2-DEPLOY.md](EC2-DEPLOY.md).
+
+---
 ## Licencia
 
 Uso interno para SaludCaribe. Todos los derechos reservados.

@@ -16,6 +16,10 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://saludcaribe-shop.vercel.app
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        value: admin@saludcaribe.com
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         value: ds3mnb969
       - key: CLOUDINARY_API_KEY

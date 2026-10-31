@@ -4,6 +4,7 @@ import com.saludcaribe.shop.model.*;
 import com.saludcaribe.shop.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,12 @@ public class DataInitializer implements CommandLineRunner {
     private final CargoRepository cargoRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
+
+    @Value("${app.bootstrap.admin.email:admin@saludcaribe.com}")
+    private String bootstrapAdminEmail;
+
+    @Value("${app.bootstrap.admin.password:}")
+    private String bootstrapAdminPassword;
 
     @Override
     public void run(String... args) {
@@ -72,45 +79,27 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private static final String ADMIN_EMAIL    = "admin@saludcaribe.com";
-    private static final String ADMIN_PASSWORD = "Admin1234!";
-
     private void seedAdmin() {
-        userRepository.findByEmail(ADMIN_EMAIL).ifPresentOrElse(
-            existing -> {
-                boolean changed = false;
+        if (bootstrapAdminPassword == null || bootstrapAdminPassword.isBlank()) {
+            log.warn("BOOTSTRAP_ADMIN_PASSWORD is empty; initial administrator creation skipped.");
+            return;
+        }
 
-                if (!passwordEncoder.matches(ADMIN_PASSWORD, existing.getPassword())) {
-                    existing.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
-                    changed = true;
-                    log.info("Admin password corregido para: {}", ADMIN_EMAIL);
-                }
+        if (userRepository.findByEmail(bootstrapAdminEmail).isPresent()) {
+            log.info("Bootstrap administrator already exists: {}", bootstrapAdminEmail);
+            return;
+        }
 
-                if (existing.getRoles() == null || !existing.getRoles().contains(AppRole.admin)) {
-                    if (existing.getRoles() == null) {
-                        existing.setRoles(new ArrayList<>(List.of(AppRole.admin)));
-                    } else {
-                        existing.getRoles().add(AppRole.admin);
-                    }
-                    changed = true;
-                    log.warn("Rol 'admin' restaurado para: {}", ADMIN_EMAIL);
-                }
-
-                if (changed) userRepository.save(existing);
-            },
-            () -> {
-                User admin = User.builder()
-                        .email(ADMIN_EMAIL)
-                        .password(passwordEncoder.encode(ADMIN_PASSWORD))
-                        .fullName("Administrador")
-                        .area("Administración")
-                        .createdAt(LocalDateTime.now())
-                        .roles(new ArrayList<>(List.of(AppRole.admin)))
-                        .build();
-                userRepository.save(admin);
-                log.info("Admin creado: {} / {}", ADMIN_EMAIL, ADMIN_PASSWORD);
-            }
-        );
+        User admin = User.builder()
+                .email(bootstrapAdminEmail)
+                .password(passwordEncoder.encode(bootstrapAdminPassword))
+                .fullName("Administrador")
+                .area("Administracion")
+                .createdAt(LocalDateTime.now())
+                .roles(new ArrayList<>(List.of(AppRole.admin)))
+                .build();
+        userRepository.save(admin);
+        log.info("Bootstrap administrator created: {}", bootstrapAdminEmail);
     }
 
     private void seedCategoriesAndProducts() {

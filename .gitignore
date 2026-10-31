@@ -38,6 +38,7 @@ backend/uploads/
 .env.*.local
 .dev.vars
 token.json
+/data/
 
 # ── Configuración local (credenciales locales, no subir a producción) ─────────
 backend/src/main/resources/application-local.properties
